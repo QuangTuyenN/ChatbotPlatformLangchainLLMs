@@ -1,0 +1,229 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chroma-server
+  labels:
+    app: chroma-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chroma-server
+  template:
+    metadata:
+      labels:
+        app: chroma-server
+    spec:
+      containers:
+      - name: chroma-server
+        image: chromadb/chroma
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: chroma-data
+          mountPath: /chroma/chroma
+        env:
+        - name: CHROMA_DB_PATH
+          value: "/data"
+      volumes:
+      - name: chroma-data
+        persistentVolumeClaim:
+          claimName: chroma-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: local-pgdb
+  labels:
+    app: local-pgdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: local-pgdb
+  template:
+    metadata:
+      labels:
+        app: local-pgdb
+    spec:
+      containers:
+      - name: local-pgdb
+        image: postgres
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: local-pgdata
+          mountPath: /var/lib/postgresql/data
+        env:
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          value: "password"
+        - name: POSTGRES_DB
+          value: "history_langchain_chat"
+      volumes:
+      - name: local-pgdata
+        persistentVolumeClaim:
+          claimName: pgdata-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgadmin4
+  labels:
+    app: pgadmin4
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgadmin4
+  template:
+    metadata:
+      labels:
+        app: pgadmin4
+    spec:
+      containers:
+      - name: pgadmin4
+        image: dpage/pgadmin4
+        ports:
+        - containerPort: 80
+        env:
+        - name: PGADMIN_DEFAULT_EMAIL
+          value: "quangtuyennguyen0299@gmail.com"
+        - name: PGADMIN_DEFAULT_PASSWORD
+          value: "thaco@1234"
+        volumeMounts:
+        - name: pgadmin-data
+          mountPath: /var/lib/pgadmin
+      volumes:
+      - name: pgadmin-data
+        persistentVolumeClaim:
+          claimName: pgadmin-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: be-chatbot
+  labels:
+    app: be-chatbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: be-chatbot
+  template:
+    metadata:
+      labels:
+        app: be-chatbot
+    spec:
+      containers:
+      - name: be-chatbot
+        image: chatbot_langchain_image
+        ports:
+        - containerPort: 1234
+        env:
+        - name: OPENAI_API_KEY
+          value: "your_key"
+        - name: MODEL_OPENAI
+          value: "gpt-4o-mini"
+        - name: CHROMA_DB_HOST
+          value: "chroma-server-service"
+        - name: CHROMA_DB_PORT
+          value: "8000"
+        - name: CHROMA_DB_COLLECTION_NAME
+          value: "thaco_collection1"
+        - name: CHUNK_SIZE
+          value: "400"
+        - name: CHUNK_OVERLAP
+          value: "80"
+        - name: POSTGRESQL_DB_USER
+          value: "postgres"
+        - name: POSTGRESQL_DB_PASS
+          value: "password"
+        - name: POSTGRESQL_DB_NAME
+          value: "history_langchain_chat"
+        - name: POSTGRESQL_DB_HOST
+          value: "local-pgdb-service"
+        - name: POSTGRESQL_DB_PORT
+          value: "5432"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chroma-server-service
+spec:
+  selector:
+    app: chroma-server
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: local-pgdb-service
+spec:
+  selector:
+    app: local-pgdb
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgadmin4-service
+spec:
+  selector:
+    app: pgadmin4
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: be-chatbot-service
+spec:
+  selector:
+    app: be-chatbot
+  ports:
+    - protocol: TCP
+      port: 1234
+      targetPort: 1234
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: chroma-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pgdata-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pgadmin-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

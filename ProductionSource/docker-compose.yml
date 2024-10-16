@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  chroma-server:
+    image: chromadb/chroma # Thay thế bằng tên image trên Docker Hub của bạn
+    container_name: chroma-server
+    ports:
+      - "8000:8000"  # Mở cổng 8000 cho Chroma server
+    volumes:
+      - ./chroma-data:/chroma/chroma  # Mount volume để lưu dữ liệu
+    environment:
+      - CHROMA_DB_PATH=/data
+    restart: always
+    networks:
+      - rasa_bridge
+  db:
+    image: postgres
+    container_name: local_pgdb
+    restart: always
+    ports:
+      - "54320:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: history_langchain_chat
+    volumes:
+      - ./local_pgdata:/var/lib/postgresql/data
+    networks:
+      - rasa_bridge
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    restart: always
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: quangtuyennguyen0299@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: thaco@1234
+    volumes:
+      - ./pgadmin-data:/var/lib/pgadmin
+  be_chatbot:
+    image: chatbot_langchain_image
+    container_name: be_chatbot_container
+    restart: always
+    ports:
+      - "1234:1234"
+    environment:
+      OPENAI_API_KEY: your_key
+      MODEL_OPENAI: gpt-4o-mini
+      CHROMA_DB_HOST: 10.14.16.28
+      CHROMA_DB_PORT: 8000
+      CHROMA_DB_COLLECTION_NAME: thaco_collection1
+      CHUNK_SIZE: 400
+      CHUNK_OVERLAP: 80
+      POSTGRESQL_DB_USER: postgres
+      POSTGRESQL_DB_PASS: password
+      POSTGRESQL_DB_NAME: history_langchain_chat
+      POSTGRESQL_DB_HOST: 10.14.16.28
+      POSTGRESQL_DB_PORT: 54320
+networks:
+  rasa_bridge:
+    driver: bridge
+
