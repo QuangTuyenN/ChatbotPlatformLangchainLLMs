@@ -27,13 +27,6 @@ import bs4
 from langchain_community.document_loaders import TextLoader, WebBaseLoader, PyPDFLoader
 from langchain_chroma import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-# from langchain.chains import create_retrieval_chain
-# from langchain.chains.combine_documents import create_stuff_documents_chain
-# from langchain.chains import create_history_aware_retriever
-# from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-# from langchain.agents import AgentExecutor, create_openai_tools_agent
-# from langchain.tools.retriever import create_retriever_tool
-# from list_tools import list_tools_use
 import os
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 import chromadb
@@ -41,81 +34,16 @@ import tempfile
 
 
 ############################# Langchain #################################
-# OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "sk-proj-s5YkjN9E5jhGY8aovG5YT3BlbkFJZwa0SeTc60uRPpcRsYCF")
-# MODEL_OPENAI = os.environ.get("MODEL_OPENAI", "gpt-4o-mini")
 CHROMA_DB_HOST = os.environ.get("CHROMA_DB_HOST", '10.14.16.30')
 CHROMA_DB_PORT = os.environ.get("CHROMA_DB_PORT", 30745)
-CHROMA_DB_COLLECTION_NAME = os.environ.get("CHROMA_DB_COLLECTION_NAME", "thaco_collection3")
 CHUNK_SIZE = os.environ.get("CHUNK_SIZE", 400)
 CHUNK_OVERLAP = os.environ.get("CHUNK_OVERLAP", 80)
 
 CHUNK_SIZE = int(CHUNK_SIZE)
 CHUNK_OVERLAP = int(CHUNK_OVERLAP)
 CHROMA_DB_PORT = int(CHROMA_DB_PORT)
-# os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-# llm = ChatOpenAI(model=MODEL_OPENAI)
 client = chromadb.HttpClient(host=CHROMA_DB_HOST, port=CHROMA_DB_PORT)
-# t1 = time.time()
-# vectorstore = Chroma(
-#     embedding_function=OpenAIEmbeddings(),
-#     collection_name=CHROMA_DB_COLLECTION_NAME,
-#     client=client
-# )
-# print("Đã kết nối tới server Chroma và sẵn sàng truy vấn")
 
-# # Retrieve and generate using the relevant snippets of the blog.
-# retriever = vectorstore.as_retriever()
-# contextualize_q_system_prompt = """Đưa ra lịch sử trò chuyện và câu hỏi mới nhất của người dùng \
-# có thể tham khảo ngữ cảnh trong lịch sử trò chuyện, tạo thành một câu hỏi độc lập \
-# có thể hiểu được nếu không có lịch sử trò chuyện. KHÔNG trả lời câu hỏi, \
-# chỉ cần định dạng lại nó nếu cần và nếu không thì trả lại như cũ."""
-#
-# contextualize_q_prompt = ChatPromptTemplate.from_messages(
-#     [
-#         ("system", contextualize_q_system_prompt),
-#         MessagesPlaceholder("chat_history"),
-#         ("human", "{input}"),
-#     ]
-# )
-#
-# history_aware_retriever = create_history_aware_retriever(
-#     llm, retriever, contextualize_q_prompt
-# )
-
-
-# qa_system_prompt = """Bạn là trợ lý cho các nhiệm vụ trả lời câu hỏi. \
-# Sử dụng các đoạn ngữ cảnh được truy xuất sau đây để trả lời câu hỏi. \
-# Nếu bạn không tìm được câu trả lời từ đoạn ngữ cảnh, hãy sử dụng dữ liệu bạn đã được huấn luyện sẵn để trả lời. \
-# Những câu hỏi xã giao ví dụ xin chào, tạm biệt thì không cần phải truy xuất ngữ cảnh. \
-# Nếu vẫn không thể trả lời được bạn cứ trả lời là xin lỗi vì bạn bị thiếu dữ liệu. \
-# Những câu trả lời cần truy cập vào internet để lấy thì bạn vẫn phải truy cập không được trả lời xin lỗi. \
-# Sử dụng tối đa ba câu và giữ câu trả lời ngắn gọn.\
-# {context}"""
-#
-# qa_prompt = ChatPromptTemplate.from_messages(
-#     [
-#         ("system", qa_system_prompt),
-#         MessagesPlaceholder("chat_history"),
-#         ("human", "{input}"),
-#         MessagesPlaceholder(variable_name='agent_scratchpad')
-#     ]
-# )
-
-# rag_tools = create_retriever_tool(
-#     history_aware_retriever,
-#     "search_thaco_info",
-#     "Tìm kiếm và trả về những thông tin về đoạn ngữ cảnh cung cấp.",
-# )
-#
-# tools = [rag_tools]
-#
-# for tool in list_tools_use:
-#     tools.append(tool)
-#
-# chat_history = []
-#
-# agent = create_openai_tools_agent(llm, tools, qa_prompt)
-# agent_executor = AgentExecutor(agent=agent, tools=tools)
 ################################ API ####################################
 MINIO_BUCKET_NAME = os.environ.get("MINIO_BUCKET_NAME", "chatbotllms")
 MINIO_EPT = os.environ.get("MINIO_EPT", "10.14.16.30:31003")
@@ -124,12 +52,13 @@ app = FastAPI(title="Chatbot Back End",
 models.Base.metadata.create_all(bind=engine)
 
 #-----------------------------CREATE ROLE, MODEL OPENAI NAME AND SUPER USER AT FIRST------------------------#
+PASS_DB_TEMP = os.environ.get("PASS_DB_TEMP", "thaco@1234")
 connection = psycopg2.connect(
     host=POSTGRESQL_DB_HOST,
     port=POSTGRESQL_DB_PORT,
     database=POSTGRESQL_DB_NAME,
     user=POSTGRESQL_DB_USER,
-    password="thaco@1234"
+    password=PASS_DB_TEMP
 )
 
 cursor = connection.cursor()
@@ -448,15 +377,15 @@ async def create_account(username: str,
                 print(f"Collection '{new_account.id}' đã được tạo thành công.")
             except Exception as bug:
                 print("bug: ", bug)
-                print(f"Collection '{acc_id_sup}' đã tồn tại.")
-                raise HTTPException(status_code=500, detail="Có lỗi xảy ra khi tạo bot do đó không thể tạo account")
-            create_bot_k8s(new_account.id, openai_api_key, model_openai.name)
+                print(f"Collection '{new_account.id}' đã tồn tại.")
+                raise HTTPException(status_code=500, detail="Có lỗi xảy ra khi tạo collection do đó không thể tạo account")
             db.add(new_account)
             db.commit()
             db.refresh(new_account)
+            create_bot_k8s(new_account.id, openai_api_key, model_openai.name)
         except Exception as bug:
             client.delete_collection(str(new_account.id))
-            print(f"Collection '{acc_id_sup}' đã bị xóa.")
+            print(f"Collection '{new_account.id}' đã bị xóa.")
             print("Bug in create bot: ", bug)
             raise HTTPException(status_code=500, detail="Có lỗi xảy ra khi tạo bot do đó không thể tạo account.")
         return new_account
@@ -560,18 +489,6 @@ async def delete_account(account_id: UUID, db: db_dependency,
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=400, detail="Có lỗi xảy ra khi xóa account và các stories.")
-
-# @app.post("/login")
-# async def login(user: LoginModel, db: Session = Depends(get_db), Authorize: AuthJWT = Depends()):
-#     account = db.query(models.Accounts).filter(models.Accounts.username == user.username).first()
-#
-#     if not account or not verify_password(user.password, account.hashed_password):
-#         raise HTTPException(status_code=401, detail="Tên tài khoản hoặc mật khẩu không đúng.")
-#
-#     # Tạo token
-#     access_token = Authorize.create_access_token(subject=str(account.id), user_claims={"role": account.role.name})
-#
-#     return {"access_token": access_token}
 
 
 @app.post("/login", tags=["Login Management"])
@@ -837,59 +754,6 @@ async def create_step(step: StepCreate, db: db_dependency, current_user: models.
         raise HTTPException(status_code=400, detail="Có lỗi xảy ra khi tạo step")
 
 
-# @app.post("/process", tags=["Process Question Management"])
-# async def process_data(input_data: InputData, db: db_dependency,
-#                        current_user: models.Accounts = Depends(get_current_user)):
-#     check_role(current_user, ["superuser", "admin", "user"])
-#     nhap = input_data.text
-#     story_id = input_data.story
-#     story = db.query(models.Stories).filter(models.Stories.id == story_id).first()
-#     if story is None:
-#         raise HTTPException(status_code=404, detail="Story không tồn tại.")
-#     steps = db.query(models.Steps).filter(models.Steps.story_id == story_id)\
-#         .order_by(models.Steps.created_at.asc()).all()
-#     list_qna = []
-#     if len(steps) == 0:
-#         list_qna = []
-#     elif 1 <= len(steps) <= 3:
-#         for step in steps:
-#             list_qna.append(step.qna[0])
-#             list_qna.append(step.qna[1])
-#     elif len(steps) > 3:
-#         for step in steps[-3:]:
-#             list_qna.append(step.qna[0])
-#             list_qna.append(step.qna[1])
-#
-#     print("list qna: ", list_qna)
-#
-#     try:
-#         retrieved_context = history_aware_retriever.invoke({"input": nhap, "chat_history": list_qna})
-#         input_data = {
-#             "input": nhap,
-#             "context": retrieved_context,
-#             "chat_history": list_qna
-#         }
-#         rep = agent_executor.invoke(input_data)
-#         bot_response = rep["output"]
-#     except Exception as bug:
-#         bot_response = "Xin lỗi nhưng tôi không có thông tin để trả lời câu hỏi của bạn."
-#
-#     qna = [nhap, bot_response]
-#
-#     new_step = models.Steps(
-#         id=uuid4(),
-#         qna=qna,
-#         created_at=datetime.now(),
-#         story_id=story_id
-#     )
-#     db.add(new_step)
-#     db.commit()
-#     db.refresh(new_step)
-#     return {
-#         "reply": bot_response
-#     }
-
-
 @app.post("/uploadfiletxt/", tags=["Upload Data Management"])
 async def upload_file_txt(file: UploadFile = File(...), current_user: models.Accounts = Depends(get_current_user)):
     check_role(current_user, ["superuser", "admin", "user"])
@@ -1019,7 +883,9 @@ def delete_data(current_user: models.Accounts = Depends(get_current_user)):
     try:
         # client.delete_collection(str(current_user.id))
         collection_vecto = client.get_collection(str(current_user.id))
-        collection_vecto.delete(where={})
+        vectors = collection_vecto.get()
+        ids = vectors['ids']
+        collection_vecto.delete(ids=ids)
         return {"message": "Đã xóa toàn bộ vector embedding trong collection."}
     except Exception as bug:
         print(bug)

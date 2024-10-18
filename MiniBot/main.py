@@ -29,10 +29,9 @@ vectorstore = None
 
 
 def init_vectorstore():
-    os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
     global vectorstore
     vectorstore = Chroma(
-        embedding_function=OpenAIEmbeddings(),
+        embedding_function=OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY),
         collection_name=CHROMA_DB_COLLECTION_NAME,
         client=client
     )
@@ -41,8 +40,7 @@ def init_vectorstore():
 
 # Tạo retriever và agent executor
 def create_retriever_and_agent():
-    os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-    llm = ChatOpenAI(model=MODEL_OPENAI)
+    llm = ChatOpenAI(model=MODEL_OPENAI, openai_api_key=OPENAI_API_KEY)
     retriever = vectorstore.as_retriever()
     contextualize_q_system_prompt = """Đưa ra lịch sử trò chuyện và câu hỏi mới nhất của người dùng, 
     có thể tham khảo ngữ cảnh trong lịch sử trò chuyện, tạo thành một câu hỏi độc lập, 

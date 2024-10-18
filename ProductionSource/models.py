@@ -17,7 +17,7 @@ class ModelOpenAIs(Base):
     __tablename__ = 'modelopenais'
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, unique=True, nullable=False)
-    accounts = relationship("Accounts", back_populates="modelopenai")
+    accounts = relationship("Accounts", back_populates="model_openai")
 
 
 class Accounts(Base):
