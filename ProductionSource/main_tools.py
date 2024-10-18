@@ -29,21 +29,20 @@ from langchain_chroma import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 # from langchain.chains import create_retrieval_chain
 # from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains import create_history_aware_retriever
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.agents import AgentExecutor, create_openai_tools_agent
-from langchain.tools.retriever import create_retriever_tool
-from list_tools import list_tools_use
+# from langchain.chains import create_history_aware_retriever
+# from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+# from langchain.agents import AgentExecutor, create_openai_tools_agent
+# from langchain.tools.retriever import create_retriever_tool
+# from list_tools import list_tools_use
 import os
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 import chromadb
 import tempfile
-import time
 
 
 ############################# Langchain #################################
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "sk-proj-s5YkjN9E5jhGY8aovG5YT3BlbkFJZwa0SeTc60uRPpcRsYCF")
-MODEL_OPENAI = os.environ.get("MODEL_OPENAI", "gpt-4o-mini")
+# OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "sk-proj-s5YkjN9E5jhGY8aovG5YT3BlbkFJZwa0SeTc60uRPpcRsYCF")
+# MODEL_OPENAI = os.environ.get("MODEL_OPENAI", "gpt-4o-mini")
 CHROMA_DB_HOST = os.environ.get("CHROMA_DB_HOST", '10.14.16.30')
 CHROMA_DB_PORT = os.environ.get("CHROMA_DB_PORT", 30745)
 CHROMA_DB_COLLECTION_NAME = os.environ.get("CHROMA_DB_COLLECTION_NAME", "thaco_collection3")
@@ -53,77 +52,70 @@ CHUNK_OVERLAP = os.environ.get("CHUNK_OVERLAP", 80)
 CHUNK_SIZE = int(CHUNK_SIZE)
 CHUNK_OVERLAP = int(CHUNK_OVERLAP)
 CHROMA_DB_PORT = int(CHROMA_DB_PORT)
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-llm = ChatOpenAI(model=MODEL_OPENAI)
+# os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+# llm = ChatOpenAI(model=MODEL_OPENAI)
 client = chromadb.HttpClient(host=CHROMA_DB_HOST, port=CHROMA_DB_PORT)
-t1 = time.time()
-vectorstore = Chroma(
-    embedding_function=OpenAIEmbeddings(),
-    collection_name=CHROMA_DB_COLLECTION_NAME,
-    client=client
-)
-t2 = time.time()
-print("vectostore time: ", t2 - t1)
-print("vectostore: ", type(vectorstore))
-print("Đã kết nối tới server Chroma và sẵn sàng truy vấn")
+# t1 = time.time()
+# vectorstore = Chroma(
+#     embedding_function=OpenAIEmbeddings(),
+#     collection_name=CHROMA_DB_COLLECTION_NAME,
+#     client=client
+# )
+# print("Đã kết nối tới server Chroma và sẵn sàng truy vấn")
 
-# Retrieve and generate using the relevant snippets of the blog.
-retriever = vectorstore.as_retriever()
-t4 = time.time()
-print("delta retrieve: ", t4 - t1)
-contextualize_q_system_prompt = """Đưa ra lịch sử trò chuyện và câu hỏi mới nhất của người dùng \
-có thể tham khảo ngữ cảnh trong lịch sử trò chuyện, tạo thành một câu hỏi độc lập \
-có thể hiểu được nếu không có lịch sử trò chuyện. KHÔNG trả lời câu hỏi, \
-chỉ cần định dạng lại nó nếu cần và nếu không thì trả lại như cũ."""
-
-contextualize_q_prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", contextualize_q_system_prompt),
-        MessagesPlaceholder("chat_history"),
-        ("human", "{input}"),
-    ]
-)
-
-history_aware_retriever = create_history_aware_retriever(
-    llm, retriever, contextualize_q_prompt
-)
+# # Retrieve and generate using the relevant snippets of the blog.
+# retriever = vectorstore.as_retriever()
+# contextualize_q_system_prompt = """Đưa ra lịch sử trò chuyện và câu hỏi mới nhất của người dùng \
+# có thể tham khảo ngữ cảnh trong lịch sử trò chuyện, tạo thành một câu hỏi độc lập \
+# có thể hiểu được nếu không có lịch sử trò chuyện. KHÔNG trả lời câu hỏi, \
+# chỉ cần định dạng lại nó nếu cần và nếu không thì trả lại như cũ."""
+#
+# contextualize_q_prompt = ChatPromptTemplate.from_messages(
+#     [
+#         ("system", contextualize_q_system_prompt),
+#         MessagesPlaceholder("chat_history"),
+#         ("human", "{input}"),
+#     ]
+# )
+#
+# history_aware_retriever = create_history_aware_retriever(
+#     llm, retriever, contextualize_q_prompt
+# )
 
 
-qa_system_prompt = """Bạn là trợ lý cho các nhiệm vụ trả lời câu hỏi. \
-Sử dụng các đoạn ngữ cảnh được truy xuất sau đây để trả lời câu hỏi. \
-Nếu bạn không tìm được câu trả lời từ đoạn ngữ cảnh, hãy sử dụng dữ liệu bạn đã được huấn luyện sẵn để trả lời. \
-Những câu hỏi xã giao ví dụ xin chào, tạm biệt thì không cần phải truy xuất ngữ cảnh. \
-Nếu vẫn không thể trả lời được bạn cứ trả lời là xin lỗi vì bạn bị thiếu dữ liệu. \
-Những câu trả lời cần truy cập vào internet để lấy thì bạn vẫn phải truy cập không được trả lời xin lỗi. \
-Sử dụng tối đa ba câu và giữ câu trả lời ngắn gọn.\
-{context}"""
+# qa_system_prompt = """Bạn là trợ lý cho các nhiệm vụ trả lời câu hỏi. \
+# Sử dụng các đoạn ngữ cảnh được truy xuất sau đây để trả lời câu hỏi. \
+# Nếu bạn không tìm được câu trả lời từ đoạn ngữ cảnh, hãy sử dụng dữ liệu bạn đã được huấn luyện sẵn để trả lời. \
+# Những câu hỏi xã giao ví dụ xin chào, tạm biệt thì không cần phải truy xuất ngữ cảnh. \
+# Nếu vẫn không thể trả lời được bạn cứ trả lời là xin lỗi vì bạn bị thiếu dữ liệu. \
+# Những câu trả lời cần truy cập vào internet để lấy thì bạn vẫn phải truy cập không được trả lời xin lỗi. \
+# Sử dụng tối đa ba câu và giữ câu trả lời ngắn gọn.\
+# {context}"""
+#
+# qa_prompt = ChatPromptTemplate.from_messages(
+#     [
+#         ("system", qa_system_prompt),
+#         MessagesPlaceholder("chat_history"),
+#         ("human", "{input}"),
+#         MessagesPlaceholder(variable_name='agent_scratchpad')
+#     ]
+# )
 
-qa_prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", qa_system_prompt),
-        MessagesPlaceholder("chat_history"),
-        ("human", "{input}"),
-        MessagesPlaceholder(variable_name='agent_scratchpad')
-    ]
-)
-
-rag_tools = create_retriever_tool(
-    history_aware_retriever,
-    "search_thaco_info",
-    "Tìm kiếm và trả về những thông tin về đoạn ngữ cảnh cung cấp.",
-)
-
-tools = [rag_tools]
-
-for tool in list_tools_use:
-    tools.append(tool)
-
-chat_history = []
-
-agent = create_openai_tools_agent(llm, tools, qa_prompt)
-agent_executor = AgentExecutor(agent=agent, tools=tools)
-t3 = time.time()
-print("delta 3: ", t3 - t1)
+# rag_tools = create_retriever_tool(
+#     history_aware_retriever,
+#     "search_thaco_info",
+#     "Tìm kiếm và trả về những thông tin về đoạn ngữ cảnh cung cấp.",
+# )
+#
+# tools = [rag_tools]
+#
+# for tool in list_tools_use:
+#     tools.append(tool)
+#
+# chat_history = []
+#
+# agent = create_openai_tools_agent(llm, tools, qa_prompt)
+# agent_executor = AgentExecutor(agent=agent, tools=tools)
 ################################ API ####################################
 MINIO_BUCKET_NAME = os.environ.get("MINIO_BUCKET_NAME", "chatbotllms")
 MINIO_EPT = os.environ.get("MINIO_EPT", "10.14.16.30:31003")
@@ -131,7 +123,7 @@ app = FastAPI(title="Chatbot Back End",
               description="Back End deploy chatbot using Langchain with OpenAI")
 models.Base.metadata.create_all(bind=engine)
 
-#-----------------------------CREATE ROLE AND SUPER USER AT FIRST------------------------#
+#-----------------------------CREATE ROLE, MODEL OPENAI NAME AND SUPER USER AT FIRST------------------------#
 connection = psycopg2.connect(
     host=POSTGRESQL_DB_HOST,
     port=POSTGRESQL_DB_PORT,
@@ -142,16 +134,21 @@ connection = psycopg2.connect(
 
 cursor = connection.cursor()
 
-role_id = "99910203-0405-0607-0809-0a0b0c0d0e09"
+role_id = str(uuid4())
 role_name = "superuser"
 
-acc_id_sup = "68f2b1a1-1206-48e5-9fd6-16e2afb21c99"
+model_openai_id = str(uuid4())
+model_openai_name = "gpt-4o-mini"
+
+acc_id_sup = str(uuid4())
 acc_username_sup = "superuser"
 acc_email_sup = "teamaithacoindustries@gmail.com"
 acc_hashed_password_sup = "$argon2id$v=19$m=65536,t=3,p=4$Y8xZi1HKuZdyTgmhtNaaUw$VUtf0JcoyR5Hqk0QiERscPq/DHmlHpJn7jx2E4PZ1kM"
 acc_role_sup = role_id
 acc_image_sup = f"http://{MINIO_EPT}/{MINIO_BUCKET_NAME}/anh1.jpg"
 acc_created_at_sup = "2024-10-05 09:15:50.463435+00"
+acc_openai_api_key = os.environ.get("OPENAI_API_KEY", "sk-proj-s5YkjN9E5jhGY8aovG5YT3BlbkFJZwa0SeTc60uRPpcRsYCF")
+acc_model_openai_id = model_openai_id
 
 check_query = sql.SQL(
     """
@@ -165,11 +162,20 @@ check_query_account = sql.SQL(
     """
 )
 
+check_query_model_openai = sql.SQL(
+    """
+    SELECT * FROM modelopenais WHERE name = %s
+    """
+)
+
 try:
     cursor.execute(check_query, (role_name,))
     existing_role = cursor.fetchone()  # select 1 row if it exist
+    cursor.execute(check_query_model_openai, (model_openai_name,))
+    existing_model_openai = cursor.fetchone()  # select 1 row if it exist
     cursor.execute(check_query_account, (role_name,))
     existing_acc = cursor.fetchone()  # select 1 row if it exist
+
     if existing_role:
         print(f"Vai trò '{role_name}' đã tồn tại, không cần thêm.")
     else:
@@ -183,19 +189,53 @@ try:
         connection.commit()  # Xác nhận thay đổi vào database
         print(f"Đã thêm vai trò '{role_name}' thành công.")
 
+    if existing_model_openai:
+        print(f"Tên model '{model_openai_name}' đã tồn tại, không cần thêm.")
+    else:
+        insert_query = sql.SQL(
+            """
+            INSERT INTO modelopenais (id, name)
+            VALUES (%s, %s)
+            """
+        )
+        cursor.execute(insert_query, (model_openai_id, model_openai_name))
+        connection.commit()  # Xác nhận thay đổi vào database
+        print(f"Đã thêm tên model openai '{model_openai_name}' thành công.")
+
     if existing_acc:
         print(f"Tài khoản superuser đã tồn tại, không cần thêm.")
     else:
+        cursor.execute(check_query, (role_name,))
+        existing_role_2 = cursor.fetchone()  # select 1 row if it exist
+        cursor.execute(check_query_model_openai, (model_openai_name,))
+        existing_model_openai_2 = cursor.fetchone()  # select 1 row if it exist
+
         insert_query_account = sql.SQL(
             """
-            INSERT INTO accounts (id, username, email, hashed_password, role_id, image, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO accounts (id, username, email, hashed_password, role_id, image, created_at, openai_api_key, 
+            model_openai_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
         )
         cursor.execute(insert_query_account, (acc_id_sup, acc_username_sup, acc_email_sup, acc_hashed_password_sup,
-                                              acc_role_sup, acc_image_sup, acc_created_at_sup))
-        connection.commit()  # Xác nhận thay đổi vào database
-        print(f"Đã thêm tài khoản super user thành công.")
+                                              existing_role_2[0], acc_image_sup, acc_created_at_sup, acc_openai_api_key,
+                                              existing_model_openai_2[0]))
+        try:
+            try:
+                collection = client.create_collection(name=acc_id_sup)
+                print(f"Collection '{acc_id_sup}' đã được tạo thành công.")
+            except Exception as bug:
+                print("bug: ", bug)
+                print(f"Collection '{acc_id_sup}' đã tồn tại.")
+            create_bot_k8s(acc_id_sup, acc_openai_api_key, model_openai_name)
+            connection.commit()  # Xác nhận thay đổi vào database
+            print(f"Đã thêm tài khoản 'superuser' và tạo bot cho 'superuser' thành công.")
+        except Exception as bug:
+            client.delete_collection(acc_id_sup)
+            print(f"Collection '{acc_id_sup}' đã bị xóa.")
+            print("Bug in create bot: ", bug)
+            print("Không thể tạo account superuser do có lỗi xảy ra khi tạo bot.")
+
 
 except Exception as e:
     print("Có lỗi xảy ra:", e)
@@ -204,7 +244,7 @@ except Exception as e:
 
 cursor.close()
 connection.close()
-#-----------------------------CREATE ROLE AND SUPER USER AT FIRST------------------------#
+#-----------------------------CREATE ROLE, MODEL OPENAI NAME AND SUPER USER AT FIRST------------------------#
 
 # Config MinIO client
 minio_client = Minio(
@@ -278,7 +318,7 @@ class AccountUpdate(BaseModel):
     email: EmailStr
     password: str
     openai_api_key: str
-    model_openai_id: UUID
+    model_openai_name_id: UUID
 
 
 class LoginModel(BaseModel):
@@ -331,43 +371,13 @@ class Hasher():
         return pwd_context.hash(password)
 
 
-# @app.post("/account/", tags=["User Management"])
-# def create_account(account: AccountCreate, db: db_dependency,
-#                    current_user: models.Accounts = Depends(get_current_user)):
-#     check_role(current_user, ["superuser", "admin"])
-#     existing_account = db.query(models.Accounts).filter(models.Accounts.username == account.username).first()
-#     if existing_account:
-#         raise HTTPException(status_code=400, detail="Tên tài khoản đã tồn tại.")
-#
-#     hashed_password = Hasher.get_password_hash(account.password)
-#
-#     new_account = models.Accounts(
-#         id=uuid4(),
-#         username=account.username,
-#         email=account.email,
-#         hashed_password=hashed_password,
-#         role_id=account.role,
-#         created_at=datetime.now()
-#     )
-#
-#     try:
-#         db.add(new_account)
-#         db.commit()
-#         db.refresh(new_account)
-#         return new_account
-#     except Exception as e:
-#         db.rollback()
-#         print("======================")
-#         print(e)
-#         raise HTTPException(status_code=400, detail="Có lỗi xảy ra khi tạo tài khoản.")
-
 @app.post("/account/", tags=["User Management"])
 async def create_account(username: str,
                          email: EmailStr,
                          password: str,
                          role: UUID,
                          openai_api_key: str,
-                         model_openai_id: UUID,
+                         name_model_openai_id: UUID,
                          db: db_dependency,
                          image: UploadFile = File(...),
                          current_user: models.Accounts = Depends(get_current_user)):
@@ -423,23 +433,32 @@ async def create_account(username: str,
         hashed_password=hashed_password,
         role_id=role,
         openai_api_key=openai_api_key,
-        model_openai_id=model_openai_id,
+        model_openai_id=name_model_openai_id,
         image=image_url,
         created_at=datetime.now()
     )
 
     try:
-        db.add(new_account)
-        db.commit()
-        db.refresh(new_account)
-        model_openai = db.query(models.ModelOpenAIs).filter(models.ModelOpenAIs.id == model_openai_id).first()
+        model_openai = db.query(models.ModelOpenAIs).filter(models.ModelOpenAIs.id == name_model_openai_id).first()
         if not model_openai:
-            raise HTTPException(status_code=404, detail="Không tìm thấy model_openai với ID đã cho.")
+            raise HTTPException(status_code=404, detail="Không tìm thấy model openai với ID đã cho.")
         try:
+            try:
+                collection_name = client.create_collection(name=new_account.id)
+                print(f"Collection '{new_account.id}' đã được tạo thành công.")
+            except Exception as bug:
+                print("bug: ", bug)
+                print(f"Collection '{acc_id_sup}' đã tồn tại.")
+                raise HTTPException(status_code=500, detail="Có lỗi xảy ra khi tạo bot do đó không thể tạo account")
             create_bot_k8s(new_account.id, openai_api_key, model_openai.name)
+            db.add(new_account)
+            db.commit()
+            db.refresh(new_account)
         except Exception as bug:
+            client.delete_collection(str(new_account.id))
+            print(f"Collection '{acc_id_sup}' đã bị xóa.")
             print("Bug in create bot: ", bug)
-            raise HTTPException(status_code=500, detail="Có lỗi xảy ra khi tạo bot.")
+            raise HTTPException(status_code=500, detail="Có lỗi xảy ra khi tạo bot do đó không thể tạo account.")
         return new_account
     except Exception as e:
         db.rollback()
@@ -496,7 +515,7 @@ def update_account(account_id: UUID, account_data: AccountUpdate, db: db_depende
     account_to_update.email = account_data.email
     account_to_update.hashed_password = hashed_password
     account_to_update.openai_api_key = account_data.openai_api_key
-    account_to_update.model_openai_id = account_data.model_openai_id
+    account_to_update.model_openai_id = account_data.model_openai_name_id
 
     try:
         db.commit()
@@ -522,6 +541,7 @@ async def delete_account(account_id: UUID, db: db_dependency,
     related_stories = db.query(models.Stories).filter(models.Stories.account_id == account_id).all()
     try:
         try:
+            client.delete_collection(str(account_id))
             delete_bot_k8s(account_id)
         except Exception as bug:
             print("Bug in delete Bot when delete account: ", bug)
@@ -817,176 +837,189 @@ async def create_step(step: StepCreate, db: db_dependency, current_user: models.
         raise HTTPException(status_code=400, detail="Có lỗi xảy ra khi tạo step")
 
 
-@app.post("/process", tags=["Process Question Management"])
-async def process_data(input_data: InputData, db: db_dependency,
-                       current_user: models.Accounts = Depends(get_current_user)):
-    check_role(current_user, ["superuser", "admin", "user"])
-    nhap = input_data.text
-    story_id = input_data.story
-    story = db.query(models.Stories).filter(models.Stories.id == story_id).first()
-    if story is None:
-        raise HTTPException(status_code=404, detail="Story không tồn tại.")
-    steps = db.query(models.Steps).filter(models.Steps.story_id == story_id)\
-        .order_by(models.Steps.created_at.asc()).all()
-    list_qna = []
-    if len(steps) == 0:
-        list_qna = []
-    elif 1 <= len(steps) <= 3:
-        for step in steps:
-            list_qna.append(step.qna[0])
-            list_qna.append(step.qna[1])
-    elif len(steps) > 3:
-        for step in steps[-3:]:
-            list_qna.append(step.qna[0])
-            list_qna.append(step.qna[1])
-
-    print("list qna: ", list_qna)
-
-    try:
-        retrieved_context = history_aware_retriever.invoke({"input": nhap, "chat_history": list_qna})
-        input_data = {
-            "input": nhap,
-            "context": retrieved_context,
-            "chat_history": list_qna
-        }
-        rep = agent_executor.invoke(input_data)
-        bot_response = rep["output"]
-    except Exception as bug:
-        bot_response = "Xin lỗi nhưng tôi không có thông tin để trả lời câu hỏi của bạn."
-
-    qna = [nhap, bot_response]
-
-    new_step = models.Steps(
-        id=uuid4(),
-        qna=qna,
-        created_at=datetime.now(),
-        story_id=story_id
-    )
-    db.add(new_step)
-    db.commit()
-    db.refresh(new_step)
-    return {
-        "reply": bot_response
-    }
+# @app.post("/process", tags=["Process Question Management"])
+# async def process_data(input_data: InputData, db: db_dependency,
+#                        current_user: models.Accounts = Depends(get_current_user)):
+#     check_role(current_user, ["superuser", "admin", "user"])
+#     nhap = input_data.text
+#     story_id = input_data.story
+#     story = db.query(models.Stories).filter(models.Stories.id == story_id).first()
+#     if story is None:
+#         raise HTTPException(status_code=404, detail="Story không tồn tại.")
+#     steps = db.query(models.Steps).filter(models.Steps.story_id == story_id)\
+#         .order_by(models.Steps.created_at.asc()).all()
+#     list_qna = []
+#     if len(steps) == 0:
+#         list_qna = []
+#     elif 1 <= len(steps) <= 3:
+#         for step in steps:
+#             list_qna.append(step.qna[0])
+#             list_qna.append(step.qna[1])
+#     elif len(steps) > 3:
+#         for step in steps[-3:]:
+#             list_qna.append(step.qna[0])
+#             list_qna.append(step.qna[1])
+#
+#     print("list qna: ", list_qna)
+#
+#     try:
+#         retrieved_context = history_aware_retriever.invoke({"input": nhap, "chat_history": list_qna})
+#         input_data = {
+#             "input": nhap,
+#             "context": retrieved_context,
+#             "chat_history": list_qna
+#         }
+#         rep = agent_executor.invoke(input_data)
+#         bot_response = rep["output"]
+#     except Exception as bug:
+#         bot_response = "Xin lỗi nhưng tôi không có thông tin để trả lời câu hỏi của bạn."
+#
+#     qna = [nhap, bot_response]
+#
+#     new_step = models.Steps(
+#         id=uuid4(),
+#         qna=qna,
+#         created_at=datetime.now(),
+#         story_id=story_id
+#     )
+#     db.add(new_step)
+#     db.commit()
+#     db.refresh(new_step)
+#     return {
+#         "reply": bot_response
+#     }
 
 
 @app.post("/uploadfiletxt/", tags=["Upload Data Management"])
 async def upload_file_txt(file: UploadFile = File(...), current_user: models.Accounts = Depends(get_current_user)):
-    check_role(current_user, ["superuser", "admin"])
+    check_role(current_user, ["superuser", "admin", "user"])
     if file.content_type != 'text/plain':
         return {"error": "File phải ở định dạng .txt"}
-    content = await file.read()
-    file_content = content.decode("utf-8")
+    try:
+        content = await file.read()
+        file_content = content.decode("utf-8")
 
-    # save temporary path
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as temp_file:
-        temp_file.write(file_content.encode('utf-8'))
-        temp_file_path = temp_file.name
+        # save temporary path
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as temp_file:
+            temp_file.write(file_content.encode('utf-8'))
+            temp_file_path = temp_file.name
 
-    loader = TextLoader(temp_file_path, encoding='utf-8')
-    docs = loader.load()
-    print("Đã load file txt")
+        loader = TextLoader(temp_file_path, encoding='utf-8')
+        docs = loader.load()
+        print("Đã load file txt")
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
-    splits = text_splitter.split_documents(docs)
-    print("Đã tách từ tài liệu mới")
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
+        splits = text_splitter.split_documents(docs)
+        print("Đã tách từ tài liệu mới")
 
-    new_vectorstore = Chroma(
-        embedding_function=OpenAIEmbeddings(),
-        collection_name=CHROMA_DB_COLLECTION_NAME,
-        client=client
-    )
-    print("Vector store đã được tải từ server chroma")
+        new_vectorstore = Chroma(
+            embedding_function=OpenAIEmbeddings(openai_api_key=current_user.openai_api_key),
+            collection_name=str(current_user.id),
+            client=client
+        )
+        print("Vector store đã được tải từ server chroma")
 
-    new_vectorstore.add_documents(documents=splits)
+        new_vectorstore.add_documents(documents=splits)
 
-    print("Embedding mới đã được thêm và lưu trữ vào chroma server")
+        print("Embedding mới đã được thêm và lưu trữ vào chroma server")
 
-    return {"message": "Embedding mới đã được thêm và lưu trữ vào chroma server."}
+        return {"message": "Embedding mới đã được thêm và lưu trữ vào chroma server."}
+    except Exception as bug:
+        print("Lỗi khi thêm mới file txt: ", bug)
+        raise HTTPException(status_code=400, detail="Có lỗi xảy ra trong quá trình embedd file txt.")
 
 
 @app.post("/uploadfilePDF/", tags=["Upload Data Management"])
 async def upload_file_pdf(file: UploadFile = File(...), current_user: models.Accounts = Depends(get_current_user)):
-    check_role(current_user, ["superuser", "admin"])
+    check_role(current_user, ["superuser", "admin", "user"])
 
     if file.content_type != 'application/pdf':
         return {"error": "File phải ở định dạng .pdf"}
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
-        temp_file.write(await file.read())
-        temp_file_path = temp_file.name
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+            temp_file.write(await file.read())
+            temp_file_path = temp_file.name
 
-    loader = PyPDFLoader(file_path=temp_file_path)
-    docs = loader.load()
+        loader = PyPDFLoader(file_path=temp_file_path)
+        docs = loader.load()
 
-    if len(docs) == 0:
-        return HTTPException(status_code=400, detail="File pdf không hợp lệ!")
+        if len(docs) == 0:
+            return HTTPException(status_code=400, detail="File pdf không hợp lệ!")
 
-    print("Đã load file PDF")
+        print("Đã load file PDF")
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
-    splits = text_splitter.split_documents(docs)
-    print("Đã tách từ tài liệu PDF")
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
+        splits = text_splitter.split_documents(docs)
+        print("Đã tách từ tài liệu PDF")
 
-    new_vectorstore = Chroma(
-        embedding_function=OpenAIEmbeddings(),
-        collection_name=CHROMA_DB_COLLECTION_NAME,
-        client=client
-    )
-    print("Vector store đã được tải từ server Chroma")
+        new_vectorstore = Chroma(
+            embedding_function=OpenAIEmbeddings(openai_api_key=current_user.openai_api_key),
+            collection_name=str(current_user.id),
+            client=client
+        )
+        print("Vector store đã được tải từ server Chroma")
 
-    new_vectorstore.add_documents(documents=splits)
+        new_vectorstore.add_documents(documents=splits)
 
-    print("Embedding mới đã được thêm và lưu trữ vào Chroma server")
+        print("Embedding mới đã được thêm và lưu trữ vào Chroma server")
 
-    return {"message": "Embedding mới đã được thêm và lưu trữ vào Chroma server."}
+        return {"message": "Embedding mới đã được thêm và lưu trữ vào Chroma server."}
+    except Exception as bug:
+        print("Có lỗi xảy ra khi embedd file pdf: ", bug)
+        raise HTTPException(status_code=400, detail="Có lỗi xảy ra trong quá trình embedd file pdf.")
 
 
 @app.post("/uploadlinkweb/", tags=["Upload Data Management"])
 def upload_link_web(link: LinkWeb, current_user: models.Accounts = Depends(get_current_user)):
-    check_role(current_user, ["superuser", "admin"])
+    check_role(current_user, ["superuser", "admin", "user"])
+    try:
+        loader = WebBaseLoader(
+            web_paths=(f"{link.link}",),
+            encoding='utf-8',
+            bs_kwargs=dict(
+                parse_only=bs4.SoupStrainer(
+                    class_=("post-content", "post-title", "post-header")
+                )
+            ),
+        )
 
-    loader = WebBaseLoader(
-        web_paths=(f"{link.link}",),
-        encoding='utf-8',
-        bs_kwargs=dict(
-            parse_only=bs4.SoupStrainer(
-                class_=("post-content", "post-title", "post-header")
-            )
-        ),
-    )
+        docs = loader.load()
+        if len(docs) == 0:
+            return HTTPException(status_code=400, detail="Link không hợp lệ!")
 
-    docs = loader.load()
-    if len(docs) == 0:
-        return HTTPException(status_code=400, detail="Link không hợp lệ!")
+        print("Đã load link")
 
-    print("Đã load link")
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
+        splits = text_splitter.split_documents(docs)
+        print("Splits:", splits)
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
-    splits = text_splitter.split_documents(docs)
-    print("Splits:", splits)
+        print("Đã tách từ tài liệu mới")
 
-    print("Đã tách từ tài liệu mới")
+        new_vectorstore = Chroma(
+            embedding_function=OpenAIEmbeddings(openai_api_key=current_user.openai_api_key),
+            collection_name=str(current_user.id),
+            client=client
+        )
+        print("Vector store đã được tải từ server chroma")
 
-    new_vectorstore = Chroma(
-        embedding_function=OpenAIEmbeddings(),
-        collection_name=CHROMA_DB_COLLECTION_NAME,
-        client=client
-    )
-    print("Vector store đã được tải từ server chroma")
+        new_vectorstore.add_documents(documents=splits)
 
-    new_vectorstore.add_documents(documents=splits)
+        print("Embedding mới đã được thêm và lưu trữ vào chroma server")
 
-    print("Embedding mới đã được thêm và lưu trữ vào chroma server")
-
-    return {"message": "Embedding mới đã được thêm và lưu trữ vào chroma server."}
+        return {"message": "Embedding mới đã được thêm và lưu trữ vào chroma server."}
+    except Exception as bug:
+        print("Lỗi khi embedd link web: ", bug)
+        raise HTTPException(status_code=400, detail="Có lỗi xảy ra trong quá trình embedd link web.")
 
 
 @app.post("/delete_data_train/", tags=["Upload Data Management"])
 def delete_data(current_user: models.Accounts = Depends(get_current_user)):
-    check_role(current_user, ["superuser", "admin"])
+    check_role(current_user, ["superuser", "admin", "user"])
     try:
-        client.delete_collection(CHROMA_DB_COLLECTION_NAME)
+        # client.delete_collection(str(current_user.id))
+        collection_vecto = client.get_collection(str(current_user.id))
+        collection_vecto.delete(where={})
         return {"message": "Đã xóa toàn bộ vector embedding trong collection."}
     except Exception as bug:
         print(bug)
