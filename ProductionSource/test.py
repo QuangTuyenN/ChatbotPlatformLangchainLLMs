@@ -32,12 +32,12 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def post_webchat():
-    url = "https://corellms.prod.bangpdk.dev/webchat/88e0cc7a-6695-4b69-a134-2139023421c6/process"
+    url = "https://corellms.prod.bangpdk.dev/webchat/5aa2ea3f-6272-4ccc-ac66-499329338d34/process"
     headers = {
         'Content-Type': 'application/json'
     }
     data = {
-        "text": "ai là giám đốc thaco industries",
+        "text": "biểu mẫu kiểm tra lắp đặt",
         "items": []
     }
     try:

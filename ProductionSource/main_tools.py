@@ -46,7 +46,7 @@ client = chromadb.HttpClient(host=CHROMA_DB_HOST, port=CHROMA_DB_PORT)
 
 ################################ API ####################################
 MINIO_BUCKET_NAME = os.environ.get("MINIO_BUCKET_NAME", "chatbotllms")
-MINIO_EPT = os.environ.get("MINIO_EPT", "10.14.16.30:31003")
+MINIO_EPT = os.environ.get("MINIO_EPT", "minio.prod.bangpdk.dev")
 app = FastAPI(title="Chatbot Back End",
               description="Back End deploy chatbot using Langchain with OpenAI")
 models.Base.metadata.create_all(bind=engine)
@@ -74,7 +74,7 @@ acc_username_sup = "superuser"
 acc_email_sup = "teamaithacoindustries@gmail.com"
 acc_hashed_password_sup = "$argon2id$v=19$m=65536,t=3,p=4$Y8xZi1HKuZdyTgmhtNaaUw$VUtf0JcoyR5Hqk0QiERscPq/DHmlHpJn7jx2E4PZ1kM"
 acc_role_sup = role_id
-acc_image_sup = f"http://{MINIO_EPT}/{MINIO_BUCKET_NAME}/anh1.jpg"
+acc_image_sup = f"https://{MINIO_EPT}/{MINIO_BUCKET_NAME}/anh1.jpg"
 acc_created_at_sup = "2024-10-05 09:15:50.463435+00"
 acc_openai_api_key = os.environ.get("OPENAI_API_KEY", "sk-proj-s5YkjN9E5jhGY8aovG5YT3BlbkFJZwa0SeTc60uRPpcRsYCF")
 acc_model_openai_id = model_openai_id
@@ -177,7 +177,7 @@ connection.close()
 
 # Config MinIO client
 minio_client = Minio(
-    endpoint=os.environ.get("MINIO_ENDPOINT", "10.14.16.30:31003"),
+    endpoint=os.environ.get("MINIO_ENDPOINT", "minio.prod.bangpdk.dev"),
     access_key=os.environ.get("MINIO_ACCESS_KEY", "teamaithaco"),
     secret_key=os.environ.get("MINIO_SECRET_KEY", "thaco@1234"),
     secure=False  # set True if MinIO server use HTTPS
@@ -243,11 +243,12 @@ class AccountResponse(BaseModel):
 
 
 class AccountUpdate(BaseModel):
-    username: str
-    email: EmailStr
-    password: str
-    openai_api_key: str
-    model_openai_name_id: UUID
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+    openai_api_key: Optional[str] = None
+    model_openai_name_id: Optional[UUID] = None
+    role_id: Optional[UUID] = None
 
 
 class LoginModel(BaseModel):
@@ -308,7 +309,7 @@ async def create_account(username: str,
                          openai_api_key: str,
                          name_model_openai_id: UUID,
                          db: db_dependency,
-                         image: UploadFile = File(...),
+                         image:  Optional[UploadFile] = File(None),
                          current_user: models.Accounts = Depends(get_current_user)):
 
     check_role(current_user, ["superuser", "admin"])
@@ -319,7 +320,7 @@ async def create_account(username: str,
 
     hashed_password = Hasher.get_password_hash(password)
 
-    ept = os.environ.get("MINIO_ENDPOINT", "10.14.16.30:31003")
+    ept = os.environ.get("MINIO_ENDPOINT", "minio.prod.bangpdk.dev")
 
     if image:
         if image.content_type not in ["image/jpeg", "image/png"]:
@@ -351,9 +352,9 @@ async def create_account(username: str,
         except S3Error as e:
             raise HTTPException(status_code=500, detail="Có lỗi xảy ra khi upload ảnh lên MinIO")
 
-        image_url = f"http://{ept}/{MINIO_BUCKET_NAME}/{new_filename}"
+        image_url = f"https://{ept}/{MINIO_BUCKET_NAME}/{new_filename}"
     else:
-        image_url = f"http://{ept}/{MINIO_BUCKET_NAME}/anh1.jpg"
+        image_url = f"https://{ept}/{MINIO_BUCKET_NAME}/anh1.jpg"
     # print("image url: ", image_url)
     new_account = models.Accounts(
         id=uuid.uuid4(),
@@ -399,7 +400,7 @@ async def create_account(username: str,
 def get_accounts(db: db_dependency, current_user: models.Accounts = Depends(get_current_user)):
     check_role(current_user, ["superuser", "admin"])
     try:
-        accounts = db.query(models.Accounts).all()
+        accounts = db.query(models.Accounts).order_by(models.Accounts.created_at.asc()).all()
         return accounts
     except Exception as e:
         raise HTTPException(status_code=400, detail="Có lỗi xảy ra khi lấy accounts")
@@ -426,11 +427,11 @@ async def get_account_detail(account_id: UUID, db: db_dependency,
     return response
 
 
-@app.put("/account/{account_id}", tags=["User Management"])
+@app.patch("/account/{account_id}", tags=["User Management"])
 def update_account(account_id: UUID, account_data: AccountUpdate, db: db_dependency,
                    current_user: models.Accounts = Depends(get_current_user)):
-    check_role(current_user, ["superuser", "admin"])
-    account_to_update = db.query(models.Accounts).filter(models.Accounts.id == account_id).first()
+    check_role(current_user, ["superuser", "admin", "user"])
+    account_to_update = db.query(models.Accounts).filter(models.Accounts.id == str(account_id)).first()
     if account_to_update is None:
         raise HTTPException(status_code=404, detail="Account không tồn tại.")
 
@@ -438,13 +439,26 @@ def update_account(account_id: UUID, account_data: AccountUpdate, db: db_depende
     if existing_account and existing_account.username != account_data.username:
         raise HTTPException(status_code=400, detail="Tên account đã tồn tại. Vui lòng chọn tên khác.")
 
-    hashed_password = Hasher.get_password_hash(account_data.password)
+    # account_to_update.username = account_data.username
+    # account_to_update.email = account_data.email
+    # account_to_update.hashed_password = hashed_password
+    # account_to_update.openai_api_key = account_data.openai_api_key
+    # account_to_update.model_openai_id = account_data.model_openai_name_id
+    # account_to_update.role_id = account_data.role_id
 
-    account_to_update.username = account_data.username
-    account_to_update.email = account_data.email
-    account_to_update.hashed_password = hashed_password
-    account_to_update.openai_api_key = account_data.openai_api_key
-    account_to_update.model_openai_id = account_data.model_openai_name_id
+    if account_data.username:
+        account_to_update.username = account_data.username
+    if account_data.email:
+        account_to_update.email = account_data.email
+    if account_data.password:
+        hashed_password = Hasher.get_password_hash(account_data.password)
+        account_to_update.hashed_password = hashed_password
+    if account_data.openai_api_key:
+        account_to_update.openai_api_key = account_data.openai_api_key
+    if account_data.model_openai_name_id:
+        account_to_update.model_openai_id = account_data.model_openai_name_id
+    if account_data.role_id:
+        account_to_update.role_id = account_data.role_id
 
     try:
         db.commit()
@@ -498,7 +512,10 @@ def login(user: LoginModel, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Tên tài khoản hoặc mật khẩu không đúng.")
     access_token = create_access_token(str(account.id))
     return {"access_token": access_token,
-            "account_id": account.id}
+            "account_id": account.id,
+            "role": account.role.name,
+            "image": account.image,
+            "user_name": account.username}
 
 
 @app.get("/roles/", tags=["Role Management"])
@@ -601,7 +618,7 @@ def delete_modelopenai(model_openai_id_delete: UUID, db: db_dependency,
                        current_user: models.Accounts = Depends(get_current_user)):
     check_role(current_user, ["superuser"])
 
-    model_openai_to_delete = db.query(models.Roles).filter(models.ModelOpenAIs.id == model_openai_id_delete).first()
+    model_openai_to_delete = db.query(models.ModelOpenAIs).filter(models.ModelOpenAIs.id == model_openai_id_delete).first()
     if model_openai_to_delete is None:
         raise HTTPException(status_code=404, detail="Tên model openAI không tồn tại.")
 

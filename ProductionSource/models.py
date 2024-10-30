@@ -55,3 +55,14 @@ class Steps(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
+class RoomMeeting(Base):
+    __tablename__ = 'roommeeting'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    room_name = Column(String, nullable=False)
+    day = Column(String, nullable=False)
+    start_hour = Column(String, nullable=False)
+    end_hour = Column(String, nullable=False)
+    meeting_content = Column(String, nullable=False)
+    name_person = Column(String, nullable=False)
+
+
