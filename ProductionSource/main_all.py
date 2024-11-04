@@ -36,7 +36,7 @@ import tempfile
 
 ############################# Langchain #################################
 CHROMA_DB_HOST = os.environ.get("CHROMA_DB_HOST", '10.14.16.30')
-CHROMA_DB_PORT = os.environ.get("CHROMA_DB_PORT", 32123)
+CHROMA_DB_PORT = os.environ.get("CHROMA_DB_PORT", 30745)
 CHUNK_SIZE = os.environ.get("CHUNK_SIZE", 400)
 CHUNK_OVERLAP = os.environ.get("CHUNK_OVERLAP", 80)
 
@@ -967,7 +967,7 @@ async def create_bucket(bucket: BucketCreate,
         raise HTTPException(status_code=400, detail="Có lỗi xảy ra khi tạo bucket trên DB")
 
 
-@app.get("/buckets", tags=["Bucket Management"])
+@app.get("/buckets", response_model=List[StoryResponse], tags=["Bucket Management"])
 def get_buckets(db: db_dependency, current_user: models.Accounts = Depends(get_current_user)):
     check_role(current_user, ["superuser", "admin"])
 
@@ -1013,7 +1013,6 @@ async def delete_file_in_bucket(bucket_name: str,
         try:
             minio_client.remove_object(bucket_name, file_name)
             print(f"File '{file_name}' đã được xóa khỏi bucket '{bucket_name}'.")
-            return f"File '{file_name}' đã được xóa khỏi bucket '{bucket_name}'. "
         except Exception as bug:
             print(f"Lỗi khi xóa file khỏi bucket: {bug}")
             raise HTTPException(status_code=400, detail="Có lỗi khi xóa file trong bucket.")
@@ -1045,16 +1044,16 @@ async def delete_bucket(bucket_id: UUID, db: db_dependency,
 
 @app.post("/upload_form/", tags=["Bucket Management"])
 async def up_form(bucket_name: str,
-                  file: UploadFile = File(...),
+                  db: db_dependency,
+                  file:  UploadFile = File(...),
                   current_user: models.Accounts = Depends(get_current_user)):
 
     check_role(current_user, ["superuser", "admin"])
 
     object_name = file.filename
 
-    temp_dir = tempfile.gettempdir()
-    file_path = os.path.join(temp_dir, object_name)
-
+    # đường dẫn tạm thời cho file
+    file_path = f"/tmp/{object_name}"
     with open(file_path, "wb") as buffer:
         buffer.write(await file.read())
 
@@ -1064,6 +1063,7 @@ async def up_form(bucket_name: str,
     except S3Error as e:
         raise HTTPException(status_code=500, detail=f"Lỗi khi upload file: {e}")
     finally:
+        # xóa đường dẫn tạm thời
         if os.path.exists(file_path):
             os.remove(file_path)
 

@@ -17,7 +17,7 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "sk-proj-s5YkjN9E5jhGY8aovG5YT
 MODEL_OPENAI = os.environ.get("MODEL_OPENAI", "gpt-4o-mini")
 CHROMA_DB_HOST = os.environ.get("CHROMA_DB_HOST", '10.14.16.30')
 CHROMA_DB_PORT = os.environ.get("CHROMA_DB_PORT", 30745)
-CHROMA_DB_COLLECTION_NAME = os.environ.get("CHROMA_DB_COLLECTION_NAME", "thaco_collection3")
+CHROMA_DB_COLLECTION_NAME = os.environ.get("CHROMA_DB_COLLECTION_NAME", "9925e853-f170-4c40-824f-3341e69f4507")
 CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE", 400))
 CHUNK_OVERLAP = int(os.environ.get("CHUNK_OVERLAP", 80))
 CHROMA_DB_PORT = int(CHROMA_DB_PORT)
@@ -124,6 +124,7 @@ async def process_data(input_data: InputData):
         }
         rep = agent_executor.invoke(input_data)
     except Exception as bug:
+        print("bug: ", bug)
         return {"reply": "Xin lỗi nhưng tôi không có thông tin để trả lời câu hỏi của bạn."}
 
     bot_response = rep["output"]

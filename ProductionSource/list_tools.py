@@ -83,19 +83,17 @@ def send_link_form(name_form: str) -> str:
     return rep
 
 
-# @tool
-# def query_meeting_room():
-#     """Khi người dùng yêu cầu đặt phòng họp mà không đưa ra tên phòng đặt, ngày họp, thời gian bắt đầu, kết thúc,
-#     tên người đặt, nội dung cuộc họp"""
-#     return "Vui lòng cung cấp cho tôi tên phòng bạn muốn đặt (RD ứng với họp ở trung tâm RD và BSP ứng với họp ở " \
-#            "Ban sản phẩm), ngày đặt (Ví dụ: 02-10 ứng với ngày 2 tháng 10), thời gian bắt đầu, kết thúc (Ví dụ: Bắt đầu" \
-#            "lúc 1 giờ và kết thúc lúc 3 giờ), nội dung cuộc họp (Ví dụ: Họp nội bộ), " \
-#            "và tên người đặt (Ví dụ: Nguyễn Thị A)"
+@tool
+def query_meeting_room():
+    """Khi người dùng yêu cầu đặt phòng họp mà không đưa ra tên phòng đặt, ngày họp, thời gian bắt đầu, kết thúc,
+    tên người đặt, nội dung cuộc họp thì trả về lệnh "ĐẶT PHÒNG HỌP" để front end đưa ra form"""
+    return "ĐẶT PHÒNG HỌP"
 
 
 @tool
-def check_meeting_room(room_name: str, day: str, start_hour: int, end_hour: int, meeting_content: str, name_person: str) -> str:
-    """Khi người dùng muốn đặt phòng họp và tuỳ theo thông tin họ cung cấp mà đưa ra phản hồi phù hợp"""
+def check_meeting_room(room_name: str, day: str, start_hour: float, end_hour: float, meeting_content: str, name_person: str):
+    """Khi người dùng đưa thông tin đặt phòng họp và cung cấp thông tin tuỳ theo thông tin họ cung cấp mà đưa ra phản
+    hồi đặt được hay không"""
     connection = psycopg2.connect(
         host=POSTGRESQL_DB_HOST,
         port=POSTGRESQL_DB_PORT,
@@ -103,23 +101,6 @@ def check_meeting_room(room_name: str, day: str, start_hour: int, end_hour: int,
         user=POSTGRESQL_DB_USER,
         password=PASS_DB_TEMP
     )
-    if not room_name and not day:
-        return "Vui lòng cung cấp cho tôi tên phòng bạn muốn đặt (RD ứng với họp ở trung tâm RD và BSP ứng với họp ở " \
-               "Ban sản phẩm), ngày đặt (Ví dụ: 02-10 ứng với ngày 2 tháng 10), thời gian bắt đầu, kết thúc (Ví dụ: Bắt đầu" \
-               "lúc 1 giờ và kết thúc lúc 3 giờ), nội dung cuộc họp (Ví dụ: Họp nội bộ), " \
-               "và tên người đặt (Ví dụ: Nguyễn Thị A)"
-    if not room_name:
-        return "Vui lòng cung cấp tên phòng họp RD hoặc BSP"
-    if not day:
-        return "Vui lòng cung cấp ngày họp (Ví dụ 02-10)"
-    if not start_hour:
-        return "Vui lòng cung cấp giờ họp"
-    if not end_hour:
-        return "Vui lòng cung cấp giờ kết thúc"
-    if not meeting_content:
-        return "Vui lòng cung cấp nội dung cuộc họp"
-    if not name_person:
-        return "Vui lòng cung cấp tên người đặt"
 
     # Tạo cursor để thực thi truy vấn
     cursor = connection.cursor()
@@ -149,7 +130,7 @@ def check_meeting_room(room_name: str, day: str, start_hour: int, end_hour: int,
 
     if filtered_result:
         for item in filtered_result:
-            if int(item['start_hour']) <= int(start_hour) <= int(item['end_hour']):
+            if float(item['start_hour']) <= float(start_hour) <= float(item['end_hour']):
                 return 'Xin lỗi nhưng khung giờ bạn đặt đã được sử dụng, chúng tôi không thể đặt cho bạn được!'
     else:
         insert_query = sql.SQL(
@@ -167,4 +148,4 @@ def check_meeting_room(room_name: str, day: str, start_hour: int, end_hour: int,
                f'dung cuộc họp là {meeting_content}.'
 
 
-list_tools_use = [send_email, send_link_form, check_meeting_room]
+list_tools_use = [send_email, send_link_form, query_meeting_room, check_meeting_room]
