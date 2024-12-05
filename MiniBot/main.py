@@ -16,8 +16,8 @@ import chromadb
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "sk-proj-s5YkjN9E5jhGY8aovG5YT3BlbkFJZwa0SeTc60uRPpcRsYCF")
 MODEL_OPENAI = os.environ.get("MODEL_OPENAI", "gpt-4o-mini")
 CHROMA_DB_HOST = os.environ.get("CHROMA_DB_HOST", '10.14.16.30')
-CHROMA_DB_PORT = os.environ.get("CHROMA_DB_PORT", 30745)
-CHROMA_DB_COLLECTION_NAME = os.environ.get("CHROMA_DB_COLLECTION_NAME", "9925e853-f170-4c40-824f-3341e69f4507")
+CHROMA_DB_PORT = os.environ.get("CHROMA_DB_PORT", 32123)
+CHROMA_DB_COLLECTION_NAME = os.environ.get("CHROMA_DB_COLLECTION_NAME", "0273e9ca-df53-4c42-94e5-5548f4a5bbd2")
 CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE", 400))
 CHUNK_OVERLAP = int(os.environ.get("CHUNK_OVERLAP", 80))
 CHROMA_DB_PORT = int(CHROMA_DB_PORT)
@@ -114,6 +114,7 @@ app.add_middleware(
 @app.post("/process", tags=["Process Question Management"])
 async def process_data(input_data: InputData):
     nhap = input_data.text
+
     list_qna = input_data.items
     try:
         retrieved_context = history_aware_retriever.invoke({"input": nhap, "chat_history": list_qna})

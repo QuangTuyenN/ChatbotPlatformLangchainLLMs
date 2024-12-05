@@ -32,12 +32,12 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def post_webchat():
-    url = "https://corellms.prod.bangpdk.dev/webchat/5aa2ea3f-6272-4ccc-ac66-499329338d34/process"
+    url = "http://chatbotllms.shop/webchat/ea999510-eb09-4bd7-ba78-8e9eea795289/process"
     headers = {
         'Content-Type': 'application/json'
     }
     data = {
-        "text": "biểu mẫu kiểm tra lắp đặt",
+        "text": "ai là giám đốc thaco industries",
         "items": []
     }
     try:
@@ -47,7 +47,7 @@ def post_webchat():
             print("Response:", response.json())
         else:
             print(f"Failed to call API. Status code: {response.status_code}")
-            print("Response:", response.text)
+            print("Response:", response.text)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
     except requests.exceptions.RequestException as e:
         print(f"An error occurred: {e}")
 

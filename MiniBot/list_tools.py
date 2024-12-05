@@ -12,13 +12,14 @@ import requests
 
 
 # MINIO CONFIG
-MINIO_EPT = os.environ.get("MINIO_ENDPOINT", "10.14.16.30:31003")
+MINIO_EPT = os.environ.get("MINIO_EPT", "10.14.16.30:31003")
 MINIO_EPT_DOMAIN = os.environ.get("MINIO_EPT_DOMAIN", "minio.prod.bangpdk.dev")
 MINIO_BUCKET_NAME = os.environ.get("MINIO_BUCKET_NAME", "chatbotllms")
 
 POSTGRESQL_DB_USER = os.environ.get("POSTGRESQL_DB_USER", "postgres")
 POSTGRESQL_DB_PASS = os.environ.get("POSTGRESQL_DB_PASS", "thaco%401234")
-POSTGRESQL_DB_NAME = os.environ.get("POSTGRESQL_DB_NAME", "db_phong_hop_test")
+POSTGRESQL_DB_NAME = os.environ.get("POSTGRESQL_DB_NAME", "corellms")
+print("POSTGRESQL_DB_NAME: ", POSTGRESQL_DB_NAME)
 POSTGRESQL_DB_HOST = os.environ.get("POSTGRESQL_DB_HOST", "10.14.16.30")
 POSTGRESQL_DB_PORT = os.environ.get("POSTGRESQL_DB_PORT", 30204)
 
@@ -29,7 +30,7 @@ PASS_DB_TEMP = os.environ.get("PASS_DB_TEMP", "thaco@1234")
 
 # Config MinIO client
 minio_client = Minio(
-    endpoint=os.environ.get("MINIO_ENDPOINT", "minio.prod.bangpdk.dev"),
+    endpoint=os.environ.get("MINIO_EPT", "10.14.16.30:31003"),
     access_key=os.environ.get("MINIO_ACCESS_KEY", "teamaithaco"),
     secret_key=os.environ.get("MINIO_SECRET_KEY", "thaco@1234"),
     secure=False  # True: MinIO server use HTTPS
@@ -67,6 +68,7 @@ def send_link_form(name_form: str) -> str:
     nếu name_form hoàn toàn khác với string điều kiện thì trả về không có hồ sơ biểu mẫu, lưu ý link file trả về phải có cả phần mở rộng của file"""
     list_link = []
     name_form = name_form.lower()
+    print("name form: ", name_form)
     connection = psycopg2.connect(
         host=POSTGRESQL_DB_HOST,
         port=POSTGRESQL_DB_PORT,
@@ -88,13 +90,16 @@ def send_link_form(name_form: str) -> str:
 
     # Lấy tất cả các dòng kết quả từ cursor
     rows = cursor.fetchall()
+    print("rows: ", rows)
     for row in rows:
         if name_form in row[2]:
             bucket_name = row[1]
+            print("bucket_name: ", bucket_name)
             objects = minio_client.list_objects(bucket_name)
             for obj in objects:
+                print("object name: ", obj.object_name)
                 list_link.append(f"https://{MINIO_EPT_DOMAIN}/{bucket_name}/{obj.object_name}")
-
+    print("list link: ", list_link)
     if list_link:
         rep = f"Sau đây là file để truy cập vào hồ sơ biểu mẫu: {list_link}"
     else:

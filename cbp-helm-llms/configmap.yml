@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chatbot-configmap
+data:
+  CHROMA_DB_HOST: "chroma-service.chroma.svc.cluster.local"
+  CHROMA_DB_PORT: "8000"
+  CHUNK_SIZE: "400"
+  CHUNK_OVERLAP: "80"
+  POSTGRESQL_DB_USER: "postgres"
+  POSTGRESQL_DB_PASS: "thaco%401234"
+  POSTGRESQL_DB_NAME: "corellms"
+  POSTGRESQL_DB_HOST: "10.14.16.30"
+  POSTGRESQL_DB_PORT: "30204"
+  MINIO_ENDPOINT: "10.14.16.30:31003"
+  MINIO_ACCESS_KEY: "teamaithaco"
+  MINIO_SECRET_KEY: "thaco@1234"
+  ACCESS_TOKEN_LIFE_TIME: "120"
+  MINIO_BUCKET_NAME: "chatbotllms"
+  PASS_DB_TEMP: "thaco@1234"
+  BOT_NAME_SPACE: "corellms"
+  BOT_PORT: "1234"
+  BOT_IMAGE: "teamaithacoindustries2024/minibot_llms:V21"
+  HOST_INGRESS_BOT: "corellms.prod.bangpdk.dev"
+  MINIO_EPT_DOMAIN: "minio.prod.bangpdk.dev"
+

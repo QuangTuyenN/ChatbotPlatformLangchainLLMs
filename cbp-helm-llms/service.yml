@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: be-chatbot-service
+  labels:
+    app: be-chatbot
+spec:
+  selector:
+    app: be-chatbot
+  ports:
+    - protocol: TCP
+      port: 1234         
+      targetPort: 1234
+      nodePort: 30776  
+  type: NodePort       

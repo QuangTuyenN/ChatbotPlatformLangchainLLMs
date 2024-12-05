@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: be-chatbot
+  labels:
+    app: be-chatbot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: be-chatbot
+  template:
+    metadata:
+      labels:
+        app: be-chatbot
+    spec:
+      containers:
+      - name: be-chatbot
+        image: teamaithacoindustries2024/core_platform_llms:V30
+        ports:
+        - containerPort: 1234
+        envFrom:
+        - configMapRef:
+            name: chatbot-configmap
+

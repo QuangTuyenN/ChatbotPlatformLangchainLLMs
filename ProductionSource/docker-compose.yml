@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   chroma-server:
-    image: chromadb/chroma # Thay thế bằng tên image trên Docker Hub của bạn
+    image: chromadb/chroma:0.5.16 # Thay thế bằng tên image trên Docker Hub của bạn
     container_name: chroma-server
     ports:
       - "8000:8000"  # Mở cổng 8000 cho Chroma server

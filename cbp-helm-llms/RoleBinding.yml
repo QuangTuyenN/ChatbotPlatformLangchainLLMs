@@ -1,0 +1,15 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: full-access-binding
+  namespace: corellms
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: corellms
+roleRef:
+  kind: Role
+  name: full-access-role
+  apiGroup: rbac.authorization.k8s.io
+
+
