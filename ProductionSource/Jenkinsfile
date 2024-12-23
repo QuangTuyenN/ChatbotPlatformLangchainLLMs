@@ -1,0 +1,73 @@
+pipeline {
+    agent any
+    environment {
+        REPO_PATH = "/be"
+        DOCKER_REGISTRY = "docker.io"
+        DOCKERHUB_USERNAME = "teamaithacoindustries2024"
+        APP_NAME = "core_chatbot_llms"
+        IMAGE_TAG = "v${BUILD_NUMBER}"
+        DOCKER_IMAGE_V = "${DOCKERHUB_USERNAME}/${APP_NAME}:${IMAGE_TAG}"
+        DOCKER_IMAGE_LATEST = "${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
+        DOCKER_CREDENTIALS_ID = 'dockerhub'
+        GIT_CREDENTIALS_ID = 'github'
+        PATH = "$PATH:/usr/bin"
+    }
+
+    stages {
+        stage('CLEAN WORKSPACE') {
+            steps {
+                script {
+                    cleanWs()
+                }
+            }
+        }
+
+        stage('CHECKOUT SOURCE CODE') {
+            steps {
+                git branch: 'prod',
+                credentialsId: GIT_CREDENTIALS_ID,
+                url: 'https://github.com/Thaco-Industries/chatbot-llms-thaco.git'
+            }
+        }
+
+        stage('BUILD IMAGES DOCKER') {
+            steps {
+                script {
+                    docker.build(DOCKER_IMAGE_V, "./be/")
+                }
+            }
+        }
+
+        stage('PUSH IMAGES DOCKERHUB') {
+            steps {
+                script {
+                    docker.withRegistry('', DOCKER_CREDENTIALS_ID) {
+                        docker.image(DOCKER_IMAGE_V).push()
+                        docker.image(DOCKER_IMAGE_V).push("latest")
+                    }
+                }
+            }
+        }
+
+        stage('DELETE IMAGES FROM SERVER CICD') {
+            steps {
+                script {
+                    sh "docker rmi ${DOCKER_IMAGE_V}"
+                    sh "docker rmi ${DOCKER_IMAGE_LATEST}"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo 'SUCCESS!'
+        }
+        failure {
+            echo 'ERROR!'
+        }
+    }
+}
