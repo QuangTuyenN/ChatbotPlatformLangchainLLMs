@@ -3,7 +3,7 @@ pipeline {
     environment {
         REPO_PATH = "/be"
         DOCKER_REGISTRY = "docker.io"
-        DOCKERHUB_USERNAME = "teamaithacoindustries2024"
+        DOCKERHUB_USERNAME = "quangtuyennguyen"
         APP_NAME = "core_chatbot_llms"
         IMAGE_TAG = "v${BUILD_NUMBER}"
         DOCKER_IMAGE_V = "${DOCKERHUB_USERNAME}/${APP_NAME}:${IMAGE_TAG}"
