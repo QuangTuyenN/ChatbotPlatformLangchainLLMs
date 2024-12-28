@@ -1,7 +1,6 @@
 pipeline {
     agent any
     environment {
-        REPO_PATH = "/be"
         DOCKER_REGISTRY = "docker.io"
         DOCKERHUB_USERNAME = "quangtuyennguyen"
         APP_NAME = "core_chatbot_llms"
@@ -9,7 +8,7 @@ pipeline {
         DOCKER_IMAGE_V = "${DOCKERHUB_USERNAME}/${APP_NAME}:${IMAGE_TAG}"
         DOCKER_IMAGE_LATEST = "${DOCKERHUB_USERNAME}/${APP_NAME}:latest"
         DOCKER_CREDENTIALS_ID = 'dockerhub'
-        GIT_CREDENTIALS_ID = 'github'
+        GIT_CREDENTIALS_ID = 'github-chat-llms'
         PATH = "$PATH:/usr/bin"
     }
 
@@ -24,16 +23,16 @@ pipeline {
 
         stage('CHECKOUT SOURCE CODE') {
             steps {
-                git branch: 'prod',
+                git branch: 'main',
                 credentialsId: GIT_CREDENTIALS_ID,
-                url: 'https://github.com/Thaco-Industries/chatbot-llms-thaco.git'
+                url: 'https://github.com/QuangTuyenN/ChatbotPlatformLangchainLLMs.git'
             }
         }
 
         stage('BUILD IMAGES DOCKER') {
             steps {
                 script {
-                    docker.build(DOCKER_IMAGE_V, "./be/")
+                    docker.build(DOCKER_IMAGE_V, "./ProductionSource/")
                 }
             }
         }
