@@ -51,9 +51,9 @@ pipeline {
         stage('DELETE IMAGES FROM SERVER CICD') {
             steps {
                 script {
-                    sh "echo ${DOCKER_IMAGE_V}"
-                    sh "docker rmi ${DOCKER_IMAGE_V}"
-                    sh "docker rmi ${DOCKER_IMAGE_LATEST}"
+                    bat "echo ${DOCKER_IMAGE_V}"
+                    bat "docker rmi ${DOCKER_IMAGE_V}"
+                    bat "docker rmi ${DOCKER_IMAGE_LATEST}"
                 }
             }
         }
