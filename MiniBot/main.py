@@ -13,7 +13,7 @@ from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 import chromadb
 
 ############################# Langchain #################################
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "sk-proj-s5YkjN9E5jhGY8aovG5YT3BlbkFJZwa0SeTc60uRPpcRsYCF")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "sk-proj-")
 MODEL_OPENAI = os.environ.get("MODEL_OPENAI", "gpt-4o-mini")
 CHROMA_DB_HOST = os.environ.get("CHROMA_DB_HOST", '10.14.16.30')
 CHROMA_DB_PORT = os.environ.get("CHROMA_DB_PORT", 32123)
@@ -79,7 +79,7 @@ def create_retriever_and_agent():
     rag_tools = create_retriever_tool(
         history_aware_retriever,
         "search_context_info",
-        "Bạn là trợ lý được phát triển bởi team AI Thaco Industries tìm kiếm và trả về những thông tin về đoạn "
+        "Bạn là trợ lý được phát triển bởi team AI  tìm kiếm và trả về những thông tin về đoạn "
         "ngữ cảnh cung cấp.",
     )
 
