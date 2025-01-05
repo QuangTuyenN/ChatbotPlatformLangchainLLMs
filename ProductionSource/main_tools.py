@@ -54,7 +54,7 @@ app = FastAPI(title="Chatbot Back End",
 models.Base.metadata.create_all(bind=engine)
 
 #-----------------------------CREATE ROLE, MODEL OPENAI NAME AND SUPER USER AT FIRST------------------------#
-PASS_DB_TEMP = os.environ.get("PASS_DB_TEMP", "thaco@1234")
+PASS_DB_TEMP = os.environ.get("PASS_DB_TEMP", "@1234")
 connection = psycopg2.connect(
     host=POSTGRESQL_DB_HOST,
     port=POSTGRESQL_DB_PORT,
@@ -78,7 +78,7 @@ acc_hashed_password_sup = "$argon2id$v=19$m=65536,t=3,p=4$Y8xZi1HKuZdyTgmhtNaaUw
 acc_role_sup = role_id
 acc_image_sup = f"https://{MINIO_EPT}/{MINIO_BUCKET_NAME}/anh1.jpg"
 acc_created_at_sup = "2024-10-05 09:15:50.463435+00"
-acc_openai_api_key = os.environ.get("OPENAI_API_KEY", "sk-proj-s5YkjN9E5jhGY8aovG5YT3BlbkFJZwa0SeTc60uRPpcRsYCF")
+acc_openai_api_key = os.environ.get("OPENAI_API_KEY", "sk-proj-")
 acc_model_openai_id = model_openai_id
 
 check_query = sql.SQL(
