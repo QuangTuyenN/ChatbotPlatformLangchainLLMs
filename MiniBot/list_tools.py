@@ -17,7 +17,7 @@ MINIO_EPT_DOMAIN = os.environ.get("MINIO_EPT_DOMAIN", "minio.prod.bangpdk.dev")
 MINIO_BUCKET_NAME = os.environ.get("MINIO_BUCKET_NAME", "chatbotllms")
 
 POSTGRESQL_DB_USER = os.environ.get("POSTGRESQL_DB_USER", "postgres")
-POSTGRESQL_DB_PASS = os.environ.get("POSTGRESQL_DB_PASS", "thaco%401234")
+POSTGRESQL_DB_PASS = os.environ.get("POSTGRESQL_DB_PASS", "%401234")
 POSTGRESQL_DB_NAME = os.environ.get("POSTGRESQL_DB_NAME", "corellms")
 print("POSTGRESQL_DB_NAME: ", POSTGRESQL_DB_NAME)
 POSTGRESQL_DB_HOST = os.environ.get("POSTGRESQL_DB_HOST", "10.14.16.30")
