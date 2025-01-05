@@ -25,14 +25,14 @@ POSTGRESQL_DB_PORT = os.environ.get("POSTGRESQL_DB_PORT", 30204)
 
 POSTGRESQL_DB_PORT = int(POSTGRESQL_DB_PORT)
 
-PASS_DB_TEMP = os.environ.get("PASS_DB_TEMP", "thaco@1234")
+PASS_DB_TEMP = os.environ.get("PASS_DB_TEMP", "@1234")
 
 
 # Config MinIO client
 minio_client = Minio(
     endpoint=os.environ.get("MINIO_EPT", "10.14.16.30:31003"),
-    access_key=os.environ.get("MINIO_ACCESS_KEY", "teamaithaco"),
-    secret_key=os.environ.get("MINIO_SECRET_KEY", "thaco@1234"),
+    access_key=os.environ.get("MINIO_ACCESS_KEY", ""),
+    secret_key=os.environ.get("MINIO_SECRET_KEY", "@1234"),
     secure=False  # True: MinIO server use HTTPS
 )
 
