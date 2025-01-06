@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: be-chatbot
-        image: teamaithacoindustries2024/core_platform_llms:V30
+        image: quangtuyennguyen0299/core_platform_llms:V30
         ports:
         - containerPort: 1234
         envFrom:

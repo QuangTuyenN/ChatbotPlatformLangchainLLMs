@@ -32,6 +32,7 @@ import os
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 import chromadb
 import tempfile
+from dotenv import load_dotenv
 
 
 ############################# Langchain #################################
@@ -54,7 +55,7 @@ app = FastAPI(title="Chatbot Back End",
 models.Base.metadata.create_all(bind=engine)
 
 #-----------------------------CREATE ROLE, MODEL OPENAI NAME AND SUPER USER AT FIRST------------------------#
-PASS_DB_TEMP = os.environ.get("PASS_DB_TEMP", "thaco@1234")
+PASS_DB_TEMP = os.environ.get("PASS_DB_TEMP", "@1234")
 connection = psycopg2.connect(
     host=POSTGRESQL_DB_HOST,
     port=POSTGRESQL_DB_PORT,
@@ -73,12 +74,12 @@ model_openai_name = "gpt-4o-mini"
 
 acc_id_sup = str(uuid4())
 acc_username_sup = "superuser"
-acc_email_sup = "teamaithacoindustries@gmail.com"
+acc_email_sup = "qyangtuyennguyen0299@gmail.com"
 acc_hashed_password_sup = "$argon2id$v=19$m=65536,t=3,p=4$Y8xZi1HKuZdyTgmhtNaaUw$VUtf0JcoyR5Hqk0QiERscPq/DHmlHpJn7jx2E4PZ1kM"
 acc_role_sup = role_id
 acc_image_sup = f"https://{MINIO_EPT}/{MINIO_BUCKET_NAME}/anh1.jpg"
 acc_created_at_sup = "2024-10-05 09:15:50.463435+00"
-acc_openai_api_key = os.environ.get("OPENAI_API_KEY", "sk-proj-s5YkjN9E5jhGY8aovG5YT3BlbkFJZwa0SeTc60uRPpcRsYCF")
+acc_openai_api_key = os.environ.get("OPENAI_API_KEY", "sk-proj")
 acc_model_openai_id = model_openai_id
 
 check_query = sql.SQL(
@@ -180,8 +181,8 @@ connection.close()
 # Config MinIO client
 minio_client = Minio(
     endpoint=os.environ.get("MINIO_ENDPOINT", "minio.prod.bangpdk.dev"),
-    access_key=os.environ.get("MINIO_ACCESS_KEY", "teamaithaco"),
-    secret_key=os.environ.get("MINIO_SECRET_KEY", "thaco@1234"),
+    access_key=os.environ.get("MINIO_ACCESS_KEY", ""),
+    secret_key=os.environ.get("MINIO_SECRET_KEY", ""),
     secure=False  # set True if MinIO server use HTTPS
 )
 

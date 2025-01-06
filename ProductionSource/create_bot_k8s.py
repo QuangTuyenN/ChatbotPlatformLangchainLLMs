@@ -9,10 +9,9 @@ from database import *
 def create_bot_k8s(bot_id, openai_api_key, model_openai):
     client = dynamic.DynamicClient(api_client.ApiClient(configuration=config.load_incluster_config()))
 
-    # Lấy các biến môi trường
     bot_port = int(os.environ.get("BOT_PORT", 1234))
     namespace = os.environ.get("BOT_NAME_SPACE", "chat")
-    bot_img = os.environ.get("BOT_IMAGE", "teamaithacoindustries2024/minibot_llms:V8")
+    bot_img = os.environ.get("BOT_IMAGE", "quangtuyennguyen0299/minibot_llms:V8")
     host_ingress_bot = os.environ.get("HOST_INGRESS_BOT", "cbpapi.prod.bangpdk.dev")
     chroma_db_host = os.environ.get("CHROMA_DB_HOST", '10.14.16.30')
     chroma_db_port = os.environ.get("CHROMA_DB_PORT", 30745)
