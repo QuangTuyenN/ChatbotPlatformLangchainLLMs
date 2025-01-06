@@ -59,7 +59,7 @@ def create_retriever_and_agent():
         llm, retriever, contextualize_q_prompt
     )
 
-    qa_system_prompt = """Bạn là trợ lý được phát triển bởi team AI thaco industries cho các nhiệm vụ trả lời câu hỏi. 
+    qa_system_prompt = """Bạn là trợ lý được phát triển bởi team AI cho các nhiệm vụ trả lời câu hỏi. 
     Sử dụng các đoạn ngữ cảnh được truy xuất sau đây để trả lời câu hỏi. 
     Nếu bạn không tìm được câu trả lời từ đoạn ngữ cảnh, hãy sử dụng dữ liệu bạn đã được huấn luyện sẵn để trả lời. 
     Những câu hỏi xã giao ví dụ xin chào, tạm biệt thì không cần phải truy xuất ngữ cảnh. 
