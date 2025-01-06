@@ -1,7 +1,6 @@
 pipeline {
     agent any
     environment {
-        REPO_PATH = "/be"
         DOCKER_REGISTRY = "docker.io"
         DOCKERHUB_USERNAME = "quangtuyennguyen"
         APP_NAME = "core_chatbot_llms"
@@ -52,8 +51,9 @@ pipeline {
         stage('DELETE IMAGES FROM SERVER CICD') {
             steps {
                 script {
-                    sh "docker rmi ${DOCKER_IMAGE_V}"
-                    sh "docker rmi ${DOCKER_IMAGE_LATEST}"
+                    bat "echo ${DOCKER_IMAGE_V}"
+                    bat "docker rmi ${DOCKER_IMAGE_V}"
+                    bat "docker rmi ${DOCKER_IMAGE_LATEST}"
                 }
             }
         }

@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   chroma-server:
-    image: chromadb/chroma:0.5.16 # Thay thế bằng tên image trên Docker Hub của bạn
+    image: chromadb/chroma:0.5.16 
     container_name: chroma-server
     ports:
       - "8000:8000"  # Mở cổng 8000 cho Chroma server
@@ -35,7 +35,7 @@ services:
       - "5050:80"
     environment:
       PGADMIN_DEFAULT_EMAIL: quangtuyennguyen0299@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: thaco@1234
+      PGADMIN_DEFAULT_PASSWORD: 
     volumes:
       - ./pgadmin-data:/var/lib/pgadmin
   be_chatbot:
@@ -49,7 +49,7 @@ services:
       MODEL_OPENAI: gpt-4o-mini
       CHROMA_DB_HOST: 10.14.16.28
       CHROMA_DB_PORT: 8000
-      CHROMA_DB_COLLECTION_NAME: thaco_collection1
+      CHROMA_DB_COLLECTION_NAME: 
       CHUNK_SIZE: 400
       CHUNK_OVERLAP: 80
       POSTGRESQL_DB_USER: postgres

@@ -79,7 +79,6 @@ acc_hashed_password_sup = "$argon2id$v=19$m=65536,t=3,p=4$Y8xZi1HKuZdyTgmhtNaaUw
 acc_role_sup = role_id
 acc_image_sup = f"https://{MINIO_EPT}/{MINIO_BUCKET_NAME}/anh1.jpg"
 acc_created_at_sup = "2024-10-05 09:15:50.463435+00"
-acc_openai_api_key = os.environ.get("OPENAI_API_KEY", "sk-proj")
 acc_model_openai_id = model_openai_id
 
 check_query = sql.SQL(
