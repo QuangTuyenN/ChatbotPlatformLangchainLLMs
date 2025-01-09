@@ -9,8 +9,8 @@ import models
 from database import engine, SessionLocal
 from database import *
 from sqlalchemy.orm import Session
-from datetime import datetime
-from auth import get_current_user, check_role, create_access_token
+from datetime import datetime, timedelta
+from auth import get_current_user, check_role, create_access_token, create_refresh_token
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 import psycopg2
@@ -256,6 +256,10 @@ class AccountUpdate(BaseModel):
 class LoginModel(BaseModel):
     username: str
     password: str
+
+
+class LoginRefreshToken(BaseModel):
+    refresh_token: str
 
 
 class RoleCreate(BaseModel):
@@ -512,17 +516,79 @@ async def delete_account(account_id: UUID, db: db_dependency,
         raise HTTPException(status_code=400, detail="Có lỗi xảy ra khi xóa account và các stories.")
 
 
+# @app.post("/login", tags=["Login Management"])
+# def login(user: LoginModel, db: Session = Depends(get_db)):
+#     account = db.query(models.Accounts).filter(models.Accounts.username == user.username).first()
+#     if not account or not Hasher.verify_password(user.password, account.hashed_password):
+#         raise HTTPException(status_code=401, detail="Tên tài khoản hoặc mật khẩu không đúng.")
+#     access_token = create_access_token(str(account.id))
+#     return {"access_token": access_token,
+#             "account_id": account.id,
+#             "role": account.role.name,
+#             "image": account.image,
+#             "user_name": account.username}
+
+
 @app.post("/login", tags=["Login Management"])
 def login(user: LoginModel, db: Session = Depends(get_db)):
     account = db.query(models.Accounts).filter(models.Accounts.username == user.username).first()
     if not account or not Hasher.verify_password(user.password, account.hashed_password):
         raise HTTPException(status_code=401, detail="Tên tài khoản hoặc mật khẩu không đúng.")
+
     access_token = create_access_token(str(account.id))
-    return {"access_token": access_token,
-            "account_id": account.id,
-            "role": account.role.name,
-            "image": account.image,
-            "user_name": account.username}
+    refresh_token_create = create_refresh_token(str(account.id))
+
+    access_token_expiry = datetime.utcnow() + timedelta(minutes=15)
+    refresh_token_expiry = datetime.utcnow() + timedelta(days=7)
+
+    token_entry = models.Tokens(
+        account_id=account.id,
+        access_token=access_token,
+        refresh_token=refresh_token_create,
+        access_token_expiry=access_token_expiry,
+        refresh_token_expiry=refresh_token_expiry,
+        is_active=True
+    )
+    db.add(token_entry)
+    db.commit()
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "account_id": account.id,
+        "role": account.role.name,
+        "image": account.image,
+        "user_name": account.username
+    }
+
+
+@app.post("/refresh-token", tags=["Login Management"])
+def refresh_token(refresh: LoginRefreshToken, db: Session = Depends(get_db)):
+    token_entry = db.query(models.Tokens).filter(models.Tokens.refresh_token == refresh.refresh_token,
+                                                 models.Tokens.is_active is True).first()
+
+    if not token_entry:
+        raise HTTPException(status_code=401, detail="Refresh token không hợp lệ hoặc đã bị thu hồi.")
+
+    if token_entry.refresh_token_expiry < datetime.utcnow():
+        raise HTTPException(status_code=401, detail="Refresh token đã hết hạn.")
+
+    new_access_token = create_access_token(str(token_entry.account_id))
+    access_token_expiry = datetime.utcnow() + timedelta(minutes=15)
+
+    new_refresh_token = create_refresh_token(str(token_entry.account_id))
+    refresh_token_expiry = datetime.utcnow() + timedelta(days=7)
+
+    token_entry.access_token = new_access_token
+    token_entry.access_token_expiry = access_token_expiry
+    token_entry.refresh_token = new_refresh_token
+    token_entry.refresh_token_expiry = refresh_token_expiry
+    db.commit()
+
+    return {
+        "access_token": new_access_token,
+        "refresh_token": new_refresh_token,
+    }
 
 
 @app.get("/roles/", tags=["Role Management"])

@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import ForeignKey, Column, String, DateTime, JSON
+from sqlalchemy import ForeignKey, Column, String, DateTime, JSON, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -34,6 +34,19 @@ class Accounts(Base):
     openai_api_key = Column(String, unique=False, nullable=False)
     model_openai_id = Column(UUID(as_uuid=True), ForeignKey('modelopenais.id'), nullable=False)
     model_openai = relationship("ModelOpenAIs", back_populates="accounts")
+
+
+class Tokens(Base):
+    __tablename__ = 'tokens'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    account_id = Column(UUID(as_uuid=True), ForeignKey('accounts.id'), nullable=False)
+    access_token = Column(String, nullable=False)
+    refresh_token = Column(String, nullable=False)
+    access_token_expiry = Column(DateTime(timezone=True), nullable=False)
+    refresh_token_expiry = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    is_active = Column(Boolean, default=True)
+    account = relationship("Accounts", back_populates="tokens")
 
 
 class Stories(Base):

@@ -12,7 +12,7 @@ from typing import List
 class Settings(BaseModel):
     authjwt_secret_key: str = "bimatcuanguyenquangtuyen"
     authjwt_algorithm: str = "HS256"
-    authjwt_access_token_expires: int = 60  # token will expire in 60 minutes
+    authjwt_access_token_expires: int = 15
 
 
 settings = Settings()
@@ -33,6 +33,12 @@ def create_access_token(account_id: str):
     to_encode = {"sub": account_id, "exp": datetime.utcnow() + expires_delta}
     encoded_jwt = jwt.encode(to_encode, settings.authjwt_secret_key, algorithm=settings.authjwt_algorithm)
     return encoded_jwt
+
+
+def create_refresh_token(account_id: str):
+    expire = datetime.utcnow() + timedelta(days=7)
+    payload = {"sub": account_id, "exp": expire}
+    return jwt.encode(payload, settings.authjwt_secret_key, algorithm=settings.authjwt_algorithm)
 
 
 def get_current_user(db: Session = Depends(get_db), token: str = Security(security)):
