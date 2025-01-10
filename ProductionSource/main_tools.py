@@ -9,7 +9,7 @@ import models
 from database import engine, SessionLocal
 from database import *
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from auth import get_current_user, check_role, create_access_token, create_refresh_token
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
@@ -538,7 +538,7 @@ def login(user: LoginModel, db: Session = Depends(get_db)):
     access_token = create_access_token(str(account.id))
     refresh_token_create = create_refresh_token(str(account.id))
 
-    access_token_expiry = datetime.utcnow() + timedelta(minutes=15)
+    access_token_expiry = datetime.utcnow() + timedelta(minutes=5)
     refresh_token_expiry = datetime.utcnow() + timedelta(days=7)
 
     token_entry = models.Tokens(
@@ -546,8 +546,7 @@ def login(user: LoginModel, db: Session = Depends(get_db)):
         access_token=access_token,
         refresh_token=refresh_token_create,
         access_token_expiry=access_token_expiry,
-        refresh_token_expiry=refresh_token_expiry,
-        is_active=True
+        refresh_token_expiry=refresh_token_expiry
     )
     db.add(token_entry)
     db.commit()
@@ -564,25 +563,37 @@ def login(user: LoginModel, db: Session = Depends(get_db)):
 
 @app.post("/refresh-token", tags=["Login Management"])
 def refresh_token(refresh: LoginRefreshToken, db: Session = Depends(get_db)):
-    token_entry = db.query(models.Tokens).filter(models.Tokens.refresh_token == refresh.refresh_token,
-                                                 models.Tokens.is_active is True).first()
+    token_entry = db.query(models.Tokens).filter(models.Tokens.refresh_token == refresh.refresh_token).first()
 
     if not token_entry:
         raise HTTPException(status_code=401, detail="Refresh token không hợp lệ hoặc đã bị thu hồi.")
 
-    if token_entry.refresh_token_expiry < datetime.utcnow():
+    if token_entry.refresh_token_expiry < datetime.utcnow().replace(tzinfo=timezone.utc):
         raise HTTPException(status_code=401, detail="Refresh token đã hết hạn.")
 
+    account_id = token_entry.account_id
+
     new_access_token = create_access_token(str(token_entry.account_id))
-    access_token_expiry = datetime.utcnow() + timedelta(minutes=15)
+    access_token_expiry = datetime.utcnow() + timedelta(minutes=5)
 
     new_refresh_token = create_refresh_token(str(token_entry.account_id))
     refresh_token_expiry = datetime.utcnow() + timedelta(days=7)
 
-    token_entry.access_token = new_access_token
-    token_entry.access_token_expiry = access_token_expiry
-    token_entry.refresh_token = new_refresh_token
-    token_entry.refresh_token_expiry = refresh_token_expiry
+    # token_entry.access_token = new_access_token
+    # token_entry.access_token_expiry = access_token_expiry
+    # token_entry.refresh_token = new_refresh_token
+    # token_entry.refresh_token_expiry = refresh_token_expiry
+
+    new_token = models.Tokens(
+        id=uuid4(),
+        account_id=account_id,
+        access_token=new_access_token,
+        refresh_token=new_refresh_token,
+        access_token_expiry=access_token_expiry,
+        refresh_token_expiry=refresh_token_expiry
+    )
+    db.add(new_token)
+    db.delete(token_entry)
     db.commit()
 
     return {
