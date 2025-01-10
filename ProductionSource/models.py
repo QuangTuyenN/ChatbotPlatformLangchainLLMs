@@ -46,7 +46,6 @@ class Tokens(Base):
     refresh_token_expiry = Column(DateTime(timezone=True), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     is_active = Column(Boolean, default=True)
-    account = relationship("Accounts", back_populates="tokens")
 
 
 class Stories(Base):

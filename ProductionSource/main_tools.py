@@ -554,7 +554,7 @@ def login(user: LoginModel, db: Session = Depends(get_db)):
 
     return {
         "access_token": access_token,
-        "refresh_token": refresh_token,
+        "refresh_token": refresh_token_create,
         "account_id": account.id,
         "role": account.role.name,
         "image": account.image,
