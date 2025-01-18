@@ -22,6 +22,10 @@ from PIL import Image
 from create_bot_k8s import create_bot_k8s
 from delete_bot_k8s import delete_bot_k8s
 import json
+import shutil
+import subprocess
+import io
+import re
 
 # Import library for langchain server
 import bs4
@@ -196,6 +200,10 @@ def check_permissions(account_role: str, required_role: str):
         raise HTTPException(status_code=403, detail="Không có quyền truy cập.")
 
 
+#---------------------------------------------PYDANTIC---------------------------------------------#
+VALID_PERMISSIONS = ["superuser", "admin", "user"]
+
+
 class StoryCreate(BaseModel):
     name: str
     account_id: UUID
@@ -251,6 +259,30 @@ class AccountUpdate(BaseModel):
     openai_api_key: Optional[str] = None
     model_openai_name_id: Optional[UUID] = None
     role_id: Optional[UUID] = None
+
+
+class AuthorizeCreate(BaseModel):
+    name_API: str
+    list_authorize: List[str]
+
+    @classmethod
+    def validate(cls, values):
+        invalid_permissions = [perm for perm in values["list_authorize"] if perm not in VALID_PERMISSIONS]
+        if invalid_permissions:
+            raise ValueError(f"Quyền không hợp lệ: {invalid_permissions}")
+        return values
+
+
+class AuthorizationUpdate(BaseModel):
+    name_API: str
+    list_authorize: List[str]
+
+    @classmethod
+    def validate(cls, values):
+        invalid_permissions = [perm for perm in values["list_authorize"] if perm not in VALID_PERMISSIONS]
+        if invalid_permissions:
+            raise ValueError(f"Quyền không hợp lệ: {invalid_permissions}")
+        return values
 
 
 class LoginModel(BaseModel):
@@ -310,6 +342,94 @@ class Hasher():
     @staticmethod
     def get_password_hash(password):
         return pwd_context.hash(password)
+
+
+@app.get("/Authorizations/", tags=["Authorize Management"])
+def get_authorizations(db: db_dependency, current_user: models.Accounts = Depends(get_current_user)):
+    authorization = db.query(models.Authorizations).filter(models.Authorizations.name_api == 'get_authorizations').first()
+
+    check_role(current_user, authorization.list_authorize)
+    try:
+        authorizations = db.query(models.Authorizations).all()
+        return authorizations
+    except Exception as bug:
+        raise HTTPException(status_code=400, detail="Có lỗi xảy ra khi lấy authorizations")
+
+
+@app.post("/Authorization/", tags=["Authorize Management"])
+def post_authorization(add_authorization: AuthorizeCreate, db: db_dependency, current_user: models.Accounts = Depends(get_current_user)):
+    authorization = db.query(models.Authorizations).filter(models.Authorizations.name_api == 'post_authorization').first()
+    print("name ahtho: ", authorization.name_api)
+    print("autho ", authorization.list_authorize[0])
+    check_role(current_user, authorization.list_authorize)
+    existing_authorizations = db.query(models.Authorizations)\
+        .filter(models.Authorizations.name_api == add_authorization.name_API).first()
+    if existing_authorizations:
+        raise HTTPException(status_code=400, detail="Tên authorization đã tồn tại. Vui lòng chọn tên khác.")
+
+    new_authorization = models.Authorizations(
+        id=uuid4(),
+        name_api=add_authorization.name_API,
+        list_authorize=add_authorization.list_authorize
+    )
+    try:
+        db.add(new_authorization)
+        db.commit()
+        db.refresh(new_authorization)
+        return new_authorization
+    except Exception as e:
+        db.rollback()
+        print("---------------------------")
+        print(e)
+        print("---------------------------")
+        raise HTTPException(status_code=400, detail="Có lỗi xảy ra khi tạo authorization")
+
+
+@app.patch("/authorization/{authorization_id}", tags=["Authorize Management"])
+def update_authorization(authorization_id: UUID, authorization_data: AuthorizationUpdate, db: db_dependency,
+                         current_user: models.Accounts = Depends(get_current_user)):
+    authorization = db.query(models.Authorizations).filter(
+        models.Authorizations.name_api == 'update_authorization').first()
+    print("autho ", authorization.list_authorize)
+    check_role(current_user, authorization.list_authorize)
+    authorization_to_update = db.query(models.Authorizations)\
+        .filter(models.Authorizations.id == authorization_id).first()
+    if authorization_to_update is None:
+        raise HTTPException(status_code=404, detail="Authorization không tồn tại.")
+
+    existing_authorization = db.query(models.Authorizations).\
+        filter(models.Authorizations.name_api == authorization_data.name_API).first()
+    if existing_authorization and existing_authorization.name_api != authorization_data.name_API:
+        raise HTTPException(status_code=400, detail="Tên authorization đã tồn tại. Vui lòng chọn tên khác.")
+
+    authorization_to_update.name_api = authorization_data.name_API
+    authorization_to_update.list_authorize = authorization_to_update.list_authorize
+
+    try:
+        db.commit()
+        db.refresh(authorization_to_update)
+        return authorization_to_update
+    except:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Có lỗi xảy ra khi cập nhật Authorization")
+
+
+@app.delete("/authorization/{authorization_id}", tags=["Authorize Management"])
+def delete_authorization(authorization_id: UUID,
+                         db: db_dependency, current_user: models.Accounts = Depends(get_current_user)):
+    authorization = db.query(models.Authorizations).filter(
+        models.Authorizations.name_api == 'delete_authorization').first()
+    check_role(current_user, authorization.list_authorize)
+    authorization_to_delete = db.query(models.Authorizations).filter(models.Authorizations.id == authorization_id)
+    if authorization_to_delete is None:
+        raise HTTPException(status_code=404, detail="Authorization không tồn tại.")
+    try:
+        db.delete(authorization_to_delete)
+        db.commit()
+        return {"message:": "Authorization đã được xóa thành công."}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Có lỗi xảy ra khi xóa Authenticate.")
 
 
 @app.post("/account/", tags=["User Management"])
@@ -640,7 +760,7 @@ def create_role(add_role: RoleCreate, db: db_dependency, current_user: models.Ac
 def delete_role(role_id_delete: UUID, db: db_dependency, current_user: models.Accounts = Depends(get_current_user)):
     check_role(current_user, ["superuser"])
 
-    role_to_delete = db.query(models.Roles).filter(models.Roles.id == role_id_delete).first()
+    role_to_delete = db.query(models.Roles).filter(models.Roles.id ==db:d role_id_delete).first()
     if role_to_delete is None:
         raise HTTPException(status_code=404, detail="Role không tồn tại.")
 

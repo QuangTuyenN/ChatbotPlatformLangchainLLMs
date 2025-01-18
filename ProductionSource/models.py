@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import ForeignKey, Column, String, DateTime, JSON, Boolean
+from sqlalchemy import ForeignKey, Column, String, DateTime, JSON, Boolean, ARRAY
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -18,6 +18,13 @@ class ModelOpenAIs(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String, unique=True, nullable=False)
     accounts = relationship("Accounts", back_populates="model_openai")
+
+
+class Authorizations(Base):
+    __tablename__ = 'authorizations'
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name_api = Column(String, unique=True, nullable=False)
+    list_authorize = Column(ARRAY(String), nullable=False)
 
 
 class Accounts(Base):
