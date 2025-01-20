@@ -1265,3 +1265,44 @@ async def up_form(bucket_name: str,
             os.remove(file_path)
 
 
+@app.post("/upload_video_chunk", tags=["Video, file Managements"])
+async def up_file(bucket_name: str,
+                  file: UploadFile = File(...),
+                  current_user: models.Accounts = Depends(get_current_user)):
+
+    check_role(current_user, ["superuser"])
+    chunk_size = 5 * 1024 * 1024  # Kích thước mỗi chunk (5MB)
+    object_name = file.filename
+
+    temp_dir = tempfile.gettempdir()
+    file_path = os.path.join(temp_dir, object_name)
+
+    try:
+        with open(file_path, "wb") as temp_file:
+            shutil.copyfileobj(file.file, temp_file)
+
+        if not minio_client.bucket_exists(bucket_name):
+            minio_client.make_bucket(bucket_name)
+
+        with open(file_path, 'rb') as file_data:
+            file_stat = os.stat(file_path)  # Lấy thông tin file
+            file_size = file_stat.st_size  # Kích thước file
+
+            minio_client.put_object(
+                bucket_name,
+                object_name,
+                data=file_data,
+                length=file_size,
+                part_size=chunk_size,
+            )
+
+        return {"message": f"File '{object_name}' đã được upload thành công tới bucket '{bucket_name}'."}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Lỗi khi upload file: {e}")
+    finally:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+
+
